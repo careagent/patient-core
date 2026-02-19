@@ -45,10 +45,13 @@ The patient is the ultimate authority over their health information — nothing 
 ## Context
 
 - **Ecosystem:** Part of the CareAgent ecosystem alongside provider-core. Both share architectural concepts (audit pipeline, CANS schema, platform adapter) but implement them independently.
-- **Provider-core status:** In progress. Patient-core phases align with provider-core Phase 3+ for early integration opportunity.
+- **Provider-core status:** In progress (Phases 1-2 complete, 3-6 in progress). Patient-core phases align with provider-core Phase 3+ for early integration opportunity.
+- **Hybrid architecture:** Plugin + Dedicated Agent model. The plugin handles system-level concerns (CLI, hooks, audit, tool policy). A dedicated `patientagent` provides persistent clinical workspace with CANS.md, workspace files, and clinical skills. OpenClaw multi-agent routing directs provider messages to the patient's agent.
 - **Platform:** OpenClaw plugin (primary), with support for AGENTS.md standard, Claude Code (CLAUDE.md), and library/programmatic usage.
 - **Data sovereignty principle:** The patient sets the rules of engagement. The channel spec is owned by patient-core, not provider-core.
 - **Four atomic actions:** Share (supervised), Request (autonomous), Review (autonomous), Consent (always manual). These mirror provider-core's Chart/Order/Charge/Perform from the patient's perspective.
+- **Channel transport:** File-based encrypted mailbox for v1 (zero-dep, offline-first, CLI-compatible). AES-256-GCM with counter-based IVs via Node.js built-in crypto. A2A Protocol-compatible envelope for future production upgrade.
+- **Consent enforcement:** Skill-internal two-phase flow (not hook-dependent). Tool policy (allow/deny lists) at config-time as primary enforcement. OpenClaw's `before_tool_call` hook is a backstop only.
 
 ## Constraints
 
@@ -72,10 +75,14 @@ The patient is the ultimate authority over their health information — nothing 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
 | Standalone repo | Maximum decoupling from provider-core; independent build/test/release | — Pending |
-| Channel transport deferred to research | PRD defines interface contract; specific mechanism (webhook, MQ, shared encrypted log) needs investigation | — Pending |
+| File-based encrypted mailbox for v1 channel | Zero-dep, offline-first, CLI-compatible; A2A-compatible envelope for future upgrade | — Pending |
+| Hybrid plugin + dedicated agent model | Plugin for system concerns, dedicated agent for persistent clinical workspace; matches provider-core approach | — Pending |
+| Consent as skill-internal flow, not hook-dependent | OpenClaw before_tool_call can't pause/resume (issue #19072); tool policy at config-time is primary enforcement | — Pending |
+| Counter-based IVs for AES-256-GCM | Random IVs dangerous at scale (96-bit space); counter-based with per-sender prefix is safe | — Pending |
+| Risk-stratified consent tiers | Prevent consent fatigue from undermining deny-by-default; must be Phase 2 design-time, not retrofit | — Pending |
 | Deny-by-default consent | Data sovereignty principle — explicit opt-in per provider | — Pending |
 | Consent action always manual | Hard constraint — agent never consents on patient's behalf | — Pending |
 | Zero runtime npm dependencies | Matches provider-core; minimizes supply chain risk for clinical software | — Pending |
 
 ---
-*Last updated: 2026-02-18 after initialization*
+*Last updated: 2026-02-18 after requirements definition*
