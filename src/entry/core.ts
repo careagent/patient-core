@@ -3,6 +3,10 @@
  *
  * Use this when you need access to CareAgent types, schemas, and classes
  * without triggering any platform-specific registration or activation.
+ *
+ * IMPORTANT: This module must have ZERO side effects. It only re-exports
+ * types, interfaces, and lazy factories. No file system, no audit,
+ * no adapter creation happens at import time.
  */
 
 // Adapter types
@@ -34,6 +38,18 @@ export { AuditPipeline } from '../audit/pipeline.js';
 // Workspace profiles
 export { getWorkspaceProfile } from '../onboarding/workspace-profiles.js';
 export type { WorkspaceProfile, WorkspaceFileSpec } from '../onboarding/workspace-profiles.js';
+
+// Hardening
+export type { HardeningEngine, HardeningLayerResult, HardeningConfig, HardeningLayerFn } from '../hardening/index.js';
+export { createHardeningEngine } from '../hardening/index.js';
+export { checkToolPolicy } from '../hardening/index.js';
+export { checkExecAllowlist } from '../hardening/index.js';
+export { checkCansInjection, extractProtocolRules, injectProtocol } from '../hardening/index.js';
+export { checkDockerSandbox, detectDocker } from '../hardening/index.js';
+export { checkConsentGate } from '../hardening/index.js';
+export { checkDataMinimization } from '../hardening/index.js';
+export { setupCanary } from '../hardening/index.js';
+export type { CanaryHandle } from '../hardening/canary.js';
 
 // Credentials
 export type { CredentialValidator, CredentialCheckResult } from '../credentials/index.js';
