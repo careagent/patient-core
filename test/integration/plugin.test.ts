@@ -35,20 +35,20 @@ describe('Plugin Registration Integration', () => {
   // -----------------------------------------------------------------------
 
   describe('PLUG-02: register(api) wiring', () => {
-    it('with empty workspace: register completes without throwing', () => {
+    it('with empty workspace: register completes without throwing', async () => {
       const api = createMockAPI(tmpDir);
-      expect(() => register(api)).not.toThrow();
+      await expect(register(api)).resolves.not.toThrow();
     });
 
-    it('registerCli was called (CLI commands registered)', () => {
+    it('registerCli was called (CLI commands registered)', async () => {
       const api = createMockAPI(tmpDir);
-      register(api);
+      await register(api);
       expect(api.calls.some(c => c.method === 'registerCli')).toBe(true);
     });
 
-    it('logs inactive clinical mode (no CANS.md)', () => {
+    it('logs inactive clinical mode (no CANS.md)', async () => {
       const api = createMockAPI(tmpDir);
-      register(api);
+      await register(api);
       const logCalls = api.calls.filter(c => c.method === 'log');
       const inactiveLog = logCalls.find(c =>
         typeof c.args[1] === 'string' && c.args[1].includes('Clinical mode inactive'),
@@ -56,9 +56,9 @@ describe('Plugin Registration Integration', () => {
       expect(inactiveLog).toBeDefined();
     });
 
-    it('activation gate was checked (returns inactive without CANS.md)', () => {
+    it('activation gate was checked (returns inactive without CANS.md)', async () => {
       const api = createMockAPI(tmpDir);
-      register(api);
+      await register(api);
       const logCalls = api.calls.filter(c => c.method === 'log');
       const hasInactive = logCalls.some(c =>
         typeof c.args[1] === 'string' && c.args[1].includes('inactive'),
@@ -72,22 +72,22 @@ describe('Plugin Registration Integration', () => {
   // -----------------------------------------------------------------------
 
   describe('PLUG-05: Graceful degradation', () => {
-    it('register works with minimal mock (just workspaceDir)', () => {
+    it('register works with minimal mock (just workspaceDir)', async () => {
       const api = createMinimalAPI(tmpDir);
-      expect(() => register(api)).not.toThrow();
+      await expect(register(api)).resolves.not.toThrow();
     });
 
-    it('register works with empty object (adapter falls back to process.cwd())', () => {
-      expect(() => register({})).not.toThrow();
+    it('register works with empty object (adapter falls back to process.cwd())', async () => {
+      await expect(register({})).resolves.not.toThrow();
     });
 
-    it('register does not throw when mock API is missing methods', () => {
-      expect(() => register({ workspaceDir: tmpDir, on: null, registerCli: null })).not.toThrow();
+    it('register does not throw when mock API is missing methods', async () => {
+      await expect(register({ workspaceDir: tmpDir, on: null, registerCli: null })).resolves.not.toThrow();
     });
 
-    it('logs warning about missing hooks with minimal API', () => {
+    it('logs warning about missing hooks with minimal API', async () => {
       const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-      register(createMinimalAPI(tmpDir));
+      await register(createMinimalAPI(tmpDir));
       // Standalone adapter logs warnings to console when hooks are unavailable
       // The adapter falls back to standalone which uses no-ops
       consoleSpy.mockRestore();
@@ -159,7 +159,7 @@ describe('Plugin Registration Integration', () => {
   describe('Standalone entry point', () => {
     it('activate() returns adapter, audit, gate, and activation result', async () => {
       const { activate } = await import('../../src/entry/standalone.js');
-      const result = activate(tmpDir);
+      const result = await activate(tmpDir);
       expect(result.adapter).toBeDefined();
       expect(result.audit).toBeDefined();
       expect(result.gate).toBeDefined();
@@ -168,13 +168,13 @@ describe('Plugin Registration Integration', () => {
 
     it('activate() returns inactive activation without CANS.md', async () => {
       const { activate } = await import('../../src/entry/standalone.js');
-      const result = activate(tmpDir);
+      const result = await activate(tmpDir);
       expect(result.activation.active).toBe(false);
     });
 
     it('activate() without args defaults to process.cwd()', async () => {
       const { activate } = await import('../../src/entry/standalone.js');
-      const result = activate();
+      const result = await activate();
       expect(result.adapter.getWorkspacePath()).toBe(process.cwd());
     });
   });

@@ -21,9 +21,6 @@ export default defineConfig({
         'src/cli/status-command.ts',
         'src/cli/io.ts',
         'src/cli/prompts.ts',
-        'src/activation/cans-schema.ts',
-        'src/activation/cans-parser.ts',
-        'src/activation/cans-integrity.ts',
         'src/audit/entry-schema.ts',
         'src/audit/writer.ts',
         'src/audit/integrity-service.ts',
@@ -33,11 +30,8 @@ export default defineConfig({
         'src/adapters/index.ts',
         'src/adapters/types.ts',
         'src/index.ts',
-        // Entry points depend on Phase 2 activation gate -- active branches
-        // untestable until ActivationGate is implemented (always returns inactive)
+        // Entry point core.ts is re-export only (no executable logic)
         'src/entry/core.ts',
-        'src/entry/openclaw.ts',
-        'src/entry/standalone.ts',
         // Audit pipeline is a Phase 3 stub (throws on all methods)
         'src/audit/pipeline.ts',
       ],

@@ -6,8 +6,8 @@
  * function is a non-blocking pass-through that reports injection status
  * for engine composition.
  *
- * Patient-core adaptation: uses patient identity fields instead of provider.
- * Full patient CANS schema arrives in Phase 2.
+ * Patient-core adaptation: uses typed CANSDocument fields for consent_posture,
+ * providers, and autonomy. Phase 1 defensive casting removed in Phase 2.
  *
  * Hardening is always on (deterministic, hardcoded in plugin).
  */
@@ -25,25 +25,31 @@ const LAYER_NAME = 'cans-injection';
  * Output is kept under 500 tokens (~2000 characters) to avoid
  * consuming excessive context window in the agent's system prompt.
  *
- * Uses defensive access because CANSDocument is a placeholder in Phase 1.
+ * Uses typed CANSDocument field access for consent_posture, providers,
+ * and autonomy. Phase 1 defensive casting has been removed.
  */
 export function extractProtocolRules(cans: CANSDocument): string {
-  const doc = cans as Record<string, unknown>;
   const lines: string[] = [];
   lines.push('# CareAgent Patient Protocol');
   lines.push('');
 
-  // Patient identity -- Phase 2 will provide full patient identity fields
-  if (doc.identity_type) {
-    lines.push(`Identity Type: ${doc.identity_type}`);
-  }
+  // Patient identity
+  lines.push(`Identity Type: ${cans.identity_type}`);
+
+  // Consent posture
+  lines.push(`Consent Posture: ${cans.consent_posture}`);
   lines.push('');
 
-  // Scope boundaries (if defined)
-  const scope = doc.scope as { permitted_actions?: string[] } | undefined;
-  if (scope?.permitted_actions && Array.isArray(scope.permitted_actions)) {
-    lines.push('## Scope Boundaries (HARD RULES)');
-    lines.push(`Permitted: ${scope.permitted_actions.join(', ')}`);
+  // Provider trust summary
+  if (cans.providers && cans.providers.length > 0) {
+    const activeCount = cans.providers.filter(p => p.trust_level === 'active').length;
+    lines.push(`Active Providers: ${activeCount}`);
+    lines.push('');
+  }
+
+  // Autonomy tiers
+  if (cans.autonomy) {
+    lines.push(`Autonomy: share=${cans.autonomy.share}, request=${cans.autonomy.request}, review=${cans.autonomy.review}`);
     lines.push('');
   }
 

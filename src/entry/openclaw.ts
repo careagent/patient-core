@@ -18,7 +18,7 @@ import { AuditPipeline } from '../audit/pipeline.js';
 import { registerCLI } from '../cli/commands.js';
 import { createHardeningEngine } from '../hardening/engine.js';
 
-export default function register(api: unknown): void {
+export default async function register(api: unknown): Promise<void> {
   // Step 1: Create adapter (duck-type detect and create appropriate adapter)
   const adapter = createAdapter(api);
 
@@ -63,7 +63,7 @@ export default function register(api: unknown): void {
     return;
   }
 
-  const result = gate.check();
+  const result = await gate.check();
 
   // Step 5: If not active, log reason and return
   if (!result.active || !result.document) {

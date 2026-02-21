@@ -33,7 +33,7 @@ export interface ActivateResult {
  *
  * @param workspacePath - The workspace directory. Defaults to process.cwd().
  */
-export function activate(workspacePath?: string): ActivateResult {
+export async function activate(workspacePath?: string): Promise<ActivateResult> {
   const adapter = createStandaloneAdapter(workspacePath);
   const resolvedPath = adapter.getWorkspacePath();
 
@@ -52,7 +52,7 @@ export function activate(workspacePath?: string): ActivateResult {
     }
   });
 
-  const activation = gate.check();
+  const activation = await gate.check();
 
   if (activation.active && activation.document) {
     try {

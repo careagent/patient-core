@@ -16,7 +16,7 @@ export interface ParsedFrontmatter {
   error?: string;
 }
 
-const FRONTMATTER_RE = /^---\n([\s\S]*?)\n---/;
+const FRONTMATTER_RE = /^---\n([\s\S]*?)\n?---/;
 
 /**
  * Parse YAML frontmatter from a CANS.md file.
