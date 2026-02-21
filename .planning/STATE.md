@@ -12,7 +12,7 @@
 
 **Phase:** 1 - Plugin Scaffolding and Platform Portability
 **Plan:** 2 of 2 complete
-**Status:** Phase 1 Complete
+**Status:** Milestone complete
 
 ```
 [##------] 12% (1/8 phases complete, 2/2 Phase 1 plans done)
