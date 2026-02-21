@@ -45,7 +45,7 @@ Plans:
   1. A well-formed Patient CANS.md with `identity_type: patient` activates clinical mode; absence of CANS.md means standard (non-clinical) behavior with no partial states
   2. A CANS.md with a modified byte (tampered) fails SHA-256 integrity check, triggers a warning, and does not activate
   3. A CANS.md with missing or invalid fields fails TypeBox schema validation and produces a clear error message identifying the problem
-  4. Patient health context (conditions, medications, allergies, care goals) and provider trust list (NPI, role, trust_level per provider) are parseable from a valid CANS.md
+  4. Provider trust list (NPI, role, trust_level per provider) is parseable from a valid CANS.md; health context (conditions, medications, allergies, care goals) resides in the Phase 4 chart, not CANS.md
   5. The activation gate distinguishes patient CANS.md from provider CANS.md via the `identity_type` discriminator
 **Plans:** 3 plans
 Plans:

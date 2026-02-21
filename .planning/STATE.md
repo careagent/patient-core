@@ -12,7 +12,7 @@
 
 **Phase:** 2 - Patient CANS Schema and Activation Gate
 **Plan:** 3 of 3 complete
-**Status:** Complete
+**Status:** Milestone complete
 
 ```
 [###-----] 25% (2/8 phases complete, 3/3 Phase 2 plans done)
