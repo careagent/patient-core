@@ -10,19 +10,19 @@
 
 ## Current Position
 
-**Phase:** Not started
-**Plan:** Not started
-**Status:** Roadmap created, awaiting phase planning
+**Phase:** 1 - Plugin Scaffolding and Platform Portability
+**Plan:** 1 of 2 complete
+**Status:** Executing Phase 1
 
 ```
-[--------] 0% (0/8 phases complete)
+[#-------] 6% (0/8 phases complete, 1/2 Phase 1 plans done)
 ```
 
 ## Phase Status
 
 | Phase | Status | Plans |
 |-------|--------|-------|
-| 1. Plugin Scaffolding and Platform Portability | Not started | TBD |
+| 1. Plugin Scaffolding and Platform Portability | In progress | 1/2 plans complete |
 | 2. Patient CANS Schema and Activation Gate | Not started | TBD |
 | 3. Audit Pipeline | Not started | TBD |
 | 4. Onboarding and Agent Configuration | Not started | TBD |
@@ -35,9 +35,9 @@
 
 | Metric | Value |
 |--------|-------|
-| Plans completed | 0 |
+| Plans completed | 1 |
 | Plans failed | 0 |
-| Requirements delivered | 0/69 |
+| Requirements delivered | 5/69 |
 | Test coverage | N/A |
 
 ## Accumulated Context
@@ -53,6 +53,9 @@
 | Risk-stratified consent tiers in Phase 5 | Research Pitfall 2 (consent fatigue) requires design-time solution; cannot retrofit after skills are built | Roadmap |
 | v1 integration uses mock provider harness | Provider-core v1 deferred COMM/PCAG to v2 — no ChannelAdapter exists; patient-core v1 tests against conformance harness, live cross-repo testing deferred to v2 | Roadmap |
 | Skill instructions must wire into agent context | Provider-core Phase 7 gap: `buildChartSkillInstructions()` never called by skill loader — patient-core must avoid this pattern; verify skill instructions inject at load time | Roadmap |
+| Added @types/node@22 devDependency | TypeScript does not ship Node.js type definitions; required for process, console, node:* to resolve in typecheck | Phase 1 |
+| Hook registry is adapter-internal (Map-based) | Avoids coupling patient-core hook naming to OpenClaw's event system; per RESEARCH.md recommendation | Phase 1 |
+| Patient audit uses patient-specific actors/states | Audit entry-schema uses 'patient' actor and patient-approved/modified/rejected action states | Phase 1 |
 
 ### Research Flags
 
@@ -83,14 +86,16 @@ None currently.
 
 ### TODOs
 
-- [ ] Plan Phase 1 (`/gsd:plan-phase 1`)
+- [x] Plan Phase 1 (`/gsd:plan-phase 1`)
+- [ ] Execute Phase 1 Plan 02 (entry points, hardening, tests)
 - [ ] Determine whether Phase 2 and Phase 3 execute sequentially or in parallel
 
 ## Session Continuity
 
-**Last session:** 2026-02-21T20:48:59.325Z
-**What happened:** Updated PRD, ROADMAP, REQUIREMENTS, and STATE to reflect provider-core v1 status (Phases 1-5 complete, Phase 6 in progress). Key finding: provider-core deferred COMM/PCAG to v2, so patient-core v1 integration testing uses mock provider conformance harness. Added INTG-05 to v2 requirements for live cross-repo testing. Added lesson from provider-core Phase 7 gap (skill instructions must wire into agent context at load time).
-**Next action:** Plan Phase 1 (Plugin Scaffolding and Platform Portability)
+**Last session:** 2026-02-21T21:12:24Z
+**Stopped At:** Completed 01-01-PLAN.md
+**What happened:** Executed Phase 1 Plan 01: scaffolded complete @careagent/patient-core project with zero runtime deps, PlatformAdapter layer (interface + detection + OpenClaw/standalone adapters), plugin manifest, all 44 stub modules across 14 subsystem directories, and 3 entry points. pnpm typecheck and pnpm build both pass. Added @types/node@22 as blocking deviation fix.
+**Next action:** Execute Phase 1 Plan 02 (entry points, hardening engine, comprehensive test suite)
 **Open questions:** None blocking. Research flags documented for Phases 4, 5, 6. Provider-core v2 ChannelAdapter timeline TBD.
 
 ---
