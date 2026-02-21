@@ -1,0 +1,97 @@
+# STATE: @careagent/patient-core
+
+## Project Reference
+
+**Core Value:** The patient is the ultimate authority over their health information -- nothing leaves their workspace without explicit consent, and their agent advocates for their stated preferences at every interaction.
+
+**Architecture:** Hybrid OpenClaw plugin + dedicated `patientagent`. Plugin handles system concerns (CLI, hooks, audit, tool policy). Dedicated agent provides persistent clinical workspace with CANS.md and clinical skills.
+
+**Key Constraint:** Zero runtime npm dependencies. No provider-core dependency. Synthetic data only.
+
+## Current Position
+
+**Phase:** Not started
+**Plan:** Not started
+**Status:** Roadmap created, awaiting phase planning
+
+```
+[--------] 0% (0/8 phases complete)
+```
+
+## Phase Status
+
+| Phase | Status | Plans |
+|-------|--------|-------|
+| 1. Plugin Scaffolding and Platform Portability | Not started | TBD |
+| 2. Patient CANS Schema and Activation Gate | Not started | TBD |
+| 3. Audit Pipeline | Not started | TBD |
+| 4. Onboarding and Agent Configuration | Not started | TBD |
+| 5. Consent Engine | Not started | TBD |
+| 6. Secure Channel Protocol | Not started | TBD |
+| 7. Patient Skills and Defense Integration | Not started | TBD |
+| 8. Integration Testing and Documentation | Not started | TBD |
+
+## Performance Metrics
+
+| Metric | Value |
+|--------|-------|
+| Plans completed | 0 |
+| Plans failed | 0 |
+| Requirements delivered | 0/69 |
+| Test coverage | N/A |
+
+## Accumulated Context
+
+### Key Decisions
+
+| Decision | Rationale | Phase |
+|----------|-----------|-------|
+| 8-phase comprehensive roadmap | 69 requirements across 12 categories; comprehensive depth allows natural delivery boundaries | Roadmap |
+| DFNS requirements distributed across phases | Defense requirements are integration concerns verified where their host subsystem lives | Roadmap |
+| Phase 2 and 3 parallelizable | CANS schema and Audit pipeline have no mutual dependency; both depend only on Phase 1 | Roadmap |
+| PLUG-06 assigned to Phase 4, not Phase 1 | `patientagent init` is the onboarding entry point (generates CANS.md + configures agent), not a plugin scaffold concern | Roadmap |
+| Risk-stratified consent tiers in Phase 5 | Research Pitfall 2 (consent fatigue) requires design-time solution; cannot retrofit after skills are built | Roadmap |
+| v1 integration uses mock provider harness | Provider-core v1 deferred COMM/PCAG to v2 — no ChannelAdapter exists; patient-core v1 tests against conformance harness, live cross-repo testing deferred to v2 | Roadmap |
+| Skill instructions must wire into agent context | Provider-core Phase 7 gap: `buildChartSkillInstructions()` never called by skill loader — patient-core must avoid this pattern; verify skill instructions inject at load time | Roadmap |
+
+### Research Flags
+
+| Phase | Flag | Detail |
+|-------|------|--------|
+| Phase 1 | STANDARD | Provider-core Phase 1-2 is direct reference |
+| Phase 2 | STANDARD | TypeBox schema patterns documented in ARCHITECTURE.md |
+| Phase 3 | STANDARD | Hash-chain audit patterns documented |
+| Phase 4 | NEEDS RESEARCH | 9-stage interview prompts at 3 health literacy levels; risk stratification tier thresholds |
+| Phase 5 | NEEDS RESEARCH | Risk-stratified consent tier definitions have regulatory implications (42 CFR Part 2, state mental health laws) |
+| Phase 6 | NEEDS RESEARCH | Key exchange ceremony for v1 file-based transport; out-of-band key distribution UX |
+| Phase 7 | STANDARD | BaseSkill template fully specified in ARCHITECTURE.md |
+| Phase 8 | STANDARD | Integration testing follows standard cross-repo contract testing |
+
+### Critical Pitfalls to Track
+
+| Pitfall | Severity | Relevant Phase | Status |
+|---------|----------|----------------|--------|
+| Consent gate bypass via LLM context leakage | CRITICAL | Phase 7 | Not addressed |
+| Consent fatigue from deny-by-default | CRITICAL | Phase 5 | Not addressed |
+| AES-GCM IV reuse destroying encryption | CRITICAL | Phase 6 | Not addressed |
+| Cross-agent prompt injection via provider messages | CRITICAL | Phase 7 | Not addressed |
+| Hook dependency for async consent (OpenClaw limitation) | CRITICAL | Phase 7 | Mitigated by design (skill-internal flow) |
+
+### Blockers
+
+None currently.
+
+### TODOs
+
+- [ ] Plan Phase 1 (`/gsd:plan-phase 1`)
+- [ ] Determine whether Phase 2 and Phase 3 execute sequentially or in parallel
+
+## Session Continuity
+
+**Last session:** 2026-02-21T20:48:59.325Z
+**What happened:** Updated PRD, ROADMAP, REQUIREMENTS, and STATE to reflect provider-core v1 status (Phases 1-5 complete, Phase 6 in progress). Key finding: provider-core deferred COMM/PCAG to v2, so patient-core v1 integration testing uses mock provider conformance harness. Added INTG-05 to v2 requirements for live cross-repo testing. Added lesson from provider-core Phase 7 gap (skill instructions must wire into agent context at load time).
+**Next action:** Plan Phase 1 (Plugin Scaffolding and Platform Portability)
+**Open questions:** None blocking. Research flags documented for Phases 4, 5, 6. Provider-core v2 ChannelAdapter timeline TBD.
+
+---
+*Last updated: 2026-02-21*
