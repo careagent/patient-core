@@ -1,0 +1,10 @@
+{
+  "id": "@careagent/patient-core",
+  "name": "CareAgent",
+  "description": "Patient-facing clinical agent with consent engine and secure channel",
+  "version": "0.1.0",
+  "configSchema": {},
+  "skills": [],
+  "commands": [],
+  "hooks": []
+}

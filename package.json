@@ -1,0 +1,58 @@
+{
+  "name": "@careagent/patient-core",
+  "version": "0.1.0",
+  "description": "Patient-facing clinical agent with consent engine and secure channel",
+  "license": "Apache-2.0",
+  "type": "module",
+  "openclaw": {
+    "extensions": [
+      "./dist/index.js"
+    ]
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./openclaw": {
+      "import": "./dist/entry/openclaw.js",
+      "types": "./dist/entry/openclaw.d.ts"
+    },
+    "./standalone": {
+      "import": "./dist/entry/standalone.js",
+      "types": "./dist/entry/standalone.d.ts"
+    },
+    "./core": {
+      "import": "./dist/entry/core.js",
+      "types": "./dist/entry/core.d.ts"
+    }
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "peerDependencies": {
+    "openclaw": ">=2026.1.0"
+  },
+  "peerDependenciesMeta": {
+    "openclaw": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@sinclair/typebox": "~0.34.0",
+    "@vitest/coverage-v8": "~4.0.0",
+    "tsdown": "~0.20.0",
+    "typescript": "~5.7.0",
+    "vitest": "~4.0.0",
+    "yaml": "^2.8.2"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  }
+}
