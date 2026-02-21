@@ -10,10 +10,10 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Plugin Foundation (PLUG)
 
 - [x] **PLUG-01**: Plugin manifest (`openclaw.plugin.json`) declares patient-core with extensions, skills directory, and hook registrations
-- [ ] **PLUG-02**: Plugin registers via OpenClaw's extension API on install (CLI commands, hooks, services, skills)
+- [x] **PLUG-02**: Plugin registers via OpenClaw's extension API on install (CLI commands, hooks, services, skills)
 - [x] **PLUG-03**: PlatformAdapter abstracts all OpenClaw interactions (duck-typed, no direct imports)
 - [x] **PLUG-04**: Zero runtime npm dependencies -- all runtime needs from Node.js built-ins, YAML bundled via tsdown
-- [ ] **PLUG-05**: Graceful degradation when OpenClaw hooks unavailable (try/catch -> degraded status, never crash)
+- [x] **PLUG-05**: Graceful degradation when OpenClaw hooks unavailable (try/catch -> degraded status, never crash)
 - [ ] **PLUG-06**: `patientagent init` configures dedicated agent entry in `openclaw.json` (workspace, routing, tool policies, sandbox) in addition to generating CANS.md
 
 ### Patient CANS Activation (PCANS)
@@ -79,8 +79,8 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [x] **PORT-01**: PlatformAdapter interface independently implemented (same interface as provider-core, no shared code)
 - [x] **PORT-02**: Duck-type platform detection -- probe for APIs, never import OpenClaw directly
-- [ ] **PORT-03**: Platform-specific workspace file profiles for supplementation
-- [ ] **PORT-04**: Three entry points: OpenClaw (plugin), standalone (direct), core (types only)
+- [x] **PORT-03**: Platform-specific workspace file profiles for supplementation
+- [x] **PORT-04**: Three entry points: OpenClaw (plugin), standalone (direct), core (types only)
 
 ### Defense Layers (DFNS)
 
@@ -164,10 +164,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | PLUG-01 | Phase 1 | Complete |
-| PLUG-02 | Phase 1 | Pending |
+| PLUG-02 | Phase 1 | Complete |
 | PLUG-03 | Phase 1 | Complete |
 | PLUG-04 | Phase 1 | Complete |
-| PLUG-05 | Phase 1 | Pending |
+| PLUG-05 | Phase 1 | Complete |
 | PLUG-06 | Phase 4 | Pending |
 | PCANS-01 | Phase 2 | Pending |
 | PCANS-02 | Phase 2 | Pending |
@@ -212,8 +212,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SKIL-07 | Phase 7 | Pending |
 | PORT-01 | Phase 1 | Complete |
 | PORT-02 | Phase 1 | Complete |
-| PORT-03 | Phase 1 | Pending |
-| PORT-04 | Phase 1 | Pending |
+| PORT-03 | Phase 1 | Complete |
+| PORT-04 | Phase 1 | Complete |
 | DFNS-01 | Phase 7 | Pending |
 | DFNS-02 | Phase 7 | Pending |
 | DFNS-03 | Phase 6 | Pending |
