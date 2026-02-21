@@ -19,10 +19,10 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Patient CANS Activation (PCANS)
 
 - [x] **PCANS-01**: Patient CANS.md with `identity_type: patient` declares patient identity, health context, consent preferences, provider trust list, advocacy boundaries
-- [ ] **PCANS-02**: CANS.md presence activates patient clinical mode; absence = standard behavior (binary gate, no partial states)
+- [x] **PCANS-02**: CANS.md presence activates patient clinical mode; absence = standard behavior (binary gate, no partial states)
 - [x] **PCANS-03**: TypeBox schema validates all CANS.md fields at parse time
 - [x] **PCANS-04**: SHA-256 integrity check on every CANS.md load; tampered file triggers warning and does not activate
-- [ ] **PCANS-05**: Malformed CANS.md = inactive with clear error message (never partially active)
+- [x] **PCANS-05**: Malformed CANS.md = inactive with clear error message (never partially active)
 - [x] **PCANS-06**: Patient health context stored in CANS.md (conditions, medications, allergies, care goals)
 - [x] **PCANS-07**: Provider trust list with NPI, role, and trust_level (active/suspended/revoked) per provider
 
@@ -170,10 +170,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PLUG-05 | Phase 1 | Complete |
 | PLUG-06 | Phase 4 | Pending |
 | PCANS-01 | Phase 2 | Complete |
-| PCANS-02 | Phase 2 | Pending |
+| PCANS-02 | Phase 2 | Complete |
 | PCANS-03 | Phase 2 | Complete |
 | PCANS-04 | Phase 2 | Complete |
-| PCANS-05 | Phase 2 | Pending |
+| PCANS-05 | Phase 2 | Complete |
 | PCANS-06 | Phase 2 | Complete |
 | PCANS-07 | Phase 2 | Complete |
 | AUDT-01 | Phase 3 | Pending |

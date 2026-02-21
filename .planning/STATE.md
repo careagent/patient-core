@@ -11,11 +11,11 @@
 ## Current Position
 
 **Phase:** 2 - Patient CANS Schema and Activation Gate
-**Plan:** 1 of 3 complete
-**Status:** In progress
+**Plan:** 3 of 3 complete
+**Status:** Complete
 
 ```
-[##------] 15% (1/8 phases complete, 1/3 Phase 2 plans done)
+[###-----] 25% (2/8 phases complete, 3/3 Phase 2 plans done)
 ```
 
 ## Phase Status
@@ -23,7 +23,7 @@
 | Phase | Status | Plans |
 |-------|--------|-------|
 | 1. Plugin Scaffolding and Platform Portability | Complete | 2/2 plans complete |
-| 2. Patient CANS Schema and Activation Gate | In progress | 1/3 plans complete |
+| 2. Patient CANS Schema and Activation Gate | Complete | 3/3 plans complete |
 | 3. Audit Pipeline | Not started | TBD |
 | 4. Onboarding and Agent Configuration | Not started | TBD |
 | 5. Consent Engine | Not started | TBD |
@@ -35,11 +35,13 @@
 
 | Metric | Value |
 |--------|-------|
-| Plans completed | 3 |
+| Plans completed | 5 |
 | Plans failed | 0 |
-| Requirements delivered | 9/69 |
+| Requirements delivered | 16/69 |
 | Test coverage | 93% (lines) |
 | Phase 02 P01 | 3min | 2 tasks | 3 files |
+| Phase 02 P02 | 7min | 2 tasks | 10 files |
+| Phase 02 P03 | 6min | 3 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -65,6 +67,11 @@
 | IntegrityResult discriminated union | Distinguishes no-sidecar vs hash-mismatch for different remediation messages | Phase 2 |
 | verifyIntegrity is async with sidecar path | Breaking change from sync stub; gate.check() must be async accordingly | Phase 2 |
 | Exported TrustListEntrySchema and TrustLevelSchema | Enables test reuse and sub-schema validation in Plan 03 tests | Phase 2 |
+| cans-injection uses typed CANSDocument field access | Replaced defensive Record casting with typed access for consent_posture, providers, autonomy | Phase 2 |
+| extractProtocolRules includes consent posture, provider count, autonomy | Produces meaningful protocol output from real CANS fields | Phase 2 |
+| Removed Phase 1 scope.permitted_actions placeholder | No corresponding field in real CANSDocument schema | Phase 2 |
+| Integrity check BEFORE schema validation in gate pipeline | Tampered-but-schema-valid CANS.md must fail on integrity, not schema; prevents bypass | Phase 2 |
+| No audit for silent no-cans case | CONTEXT.md: no mention of clinical mode when CANS.md absent; gate returns silently | Phase 2 |
 
 ### Research Flags
 
@@ -99,16 +106,16 @@ None currently.
 - [x] Execute Phase 1 Plan 02 (entry points, hardening, tests)
 - [x] Plan Phase 2 (`/gsd:plan-phase 2`)
 - [x] Execute Phase 2 Plan 01 (CANS foundation modules)
-- [ ] Execute Phase 2 Plan 02 (activation gate)
-- [ ] Execute Phase 2 Plan 03 (tests)
+- [x] Execute Phase 2 Plan 02 (activation gate)
+- [x] Execute Phase 2 Plan 03 (tests)
 
 ## Session Continuity
 
-**Last session:** 2026-02-21T22:32:23.345Z
-**Stopped At:** Completed 02-01-PLAN.md
-**What happened:** Executed Phase 2 Plan 01: implemented three CANS foundation modules replacing Phase 1 stubs. cans-schema.ts has full TypeBox schema with 4 required fields, provider trust list, autonomy tiers. cans-parser.ts parses YAML frontmatter with edge case handling. cans-integrity.ts provides SHA-256 sidecar integrity checking. All 104 existing tests pass, typecheck clean, build produces 4 dist outputs. Zero new npm dependencies.
-**Next action:** Execute Phase 2 Plan 02 (activation gate) then Plan 03 (tests)
+**Last session:** 2026-02-21T22:41:31Z
+**Stopped At:** Completed 02-02-PLAN.md (parallel with 02-03)
+**What happened:** Executed Phase 2 Plan 02: TDD activation gate pipeline. RED: 17 failing gate tests covering all 5 pipeline steps. GREEN: async gate.check() with short-circuit pipeline (presence, parse, discriminator, integrity, schema). Updated both entry points to async. Removed activation coverage exclusions. All 166 tests pass. Plan 03 was executed in parallel.
+**Next action:** Plan and execute Phase 3 (Audit Pipeline)
 **Open questions:** None blocking.
 
 ---
-*Last updated: 2026-02-21T22:30:29Z*
+*Last updated: 2026-02-21T22:40:25Z*
