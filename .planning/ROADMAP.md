@@ -47,7 +47,11 @@ Plans:
   3. A CANS.md with missing or invalid fields fails TypeBox schema validation and produces a clear error message identifying the problem
   4. Patient health context (conditions, medications, allergies, care goals) and provider trust list (NPI, role, trust_level per provider) are parseable from a valid CANS.md
   5. The activation gate distinguishes patient CANS.md from provider CANS.md via the `identity_type` discriminator
-**Plans:** TBD
+**Plans:** 3 plans
+Plans:
+- [ ] 02-01-PLAN.md — TypeBox schema, YAML parser, and SHA-256 integrity foundation modules
+- [ ] 02-02-PLAN.md — TDD activation gate pipeline, async entry point updates, vitest config
+- [ ] 02-03-PLAN.md — TDD foundation module unit tests and cans-injection typed field access update
 
 ### Phase 3: Audit Pipeline
 **Goal:** Every patient action and channel interaction is logged to a verifiable, patient-owned audit trail that never blocks workflow
@@ -127,8 +131,8 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|---------------|--------|-----------|
-| 1. Plugin Scaffolding and Platform Portability | 0/2 | Planned | - |
-| 2. Patient CANS Schema and Activation Gate | 0/0 | Not started | - |
+| 1. Plugin Scaffolding and Platform Portability | 2/2 | Complete | 2026-02-21 |
+| 2. Patient CANS Schema and Activation Gate | 0/3 | Planned | - |
 | 3. Audit Pipeline | 0/0 | Not started | - |
 | 4. Onboarding and Agent Configuration | 0/0 | Not started | - |
 | 5. Consent Engine | 0/0 | Not started | - |
