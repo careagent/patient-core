@@ -12,8 +12,7 @@
  * Hardening is always on (deterministic, hardcoded in plugin).
  */
 
-import type { ToolCallEvent } from '../../adapters/types.js';
-import type { BootstrapContext } from '../../adapters/types.js';
+import type { ToolCallEvent, BootstrapContext } from '../../adapters/types.js';
 import type { CANSDocument } from '../../activation/cans-schema.js';
 import type { HardeningLayerResult } from '../types.js';
 
