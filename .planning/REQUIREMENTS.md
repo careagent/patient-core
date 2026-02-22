@@ -32,7 +32,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **AUDT-02**: Every patient action (share, request, review, consent) logged with full context
 - [x] **AUDT-03**: Every channel message (inbound and outbound) logged with bilateral audit entries
 - [x] **AUDT-04**: Async buffered writes -- audit never blocks patient workflow
-- [ ] **AUDT-05**: Background integrity verification service validates hash chain
+- [x] **AUDT-05**: Background integrity verification service validates hash chain
 - [x] **AUDT-06**: Patient owns and controls the audit log; audit entries log references, not raw health data content
 
 ### Onboarding (ONBD)
@@ -87,7 +87,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **DFNS-01**: Consent gate blocks unauthorized outbound data; implemented as skill-internal two-phase flow (not hook-dependent)
 - [ ] **DFNS-02**: Data minimization strips outbound messages to minimum relevant data per interaction type
 - [ ] **DFNS-03**: Provider verification validates NPI and trust_level before engagement; stale trust states detected
-- [ ] **DFNS-04**: Audit trail provides complete, verifiable interaction history with chain integrity verification
+- [x] **DFNS-04**: Audit trail provides complete, verifiable interaction history with chain integrity verification
 - [ ] **DFNS-05**: Tool policy (allow/deny lists) configured at init time as primary enforcement mechanism
 
 ### Dedicated Agent Configuration (AGNT)
@@ -180,7 +180,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | AUDT-02 | Phase 3 | Complete |
 | AUDT-03 | Phase 3 | Complete |
 | AUDT-04 | Phase 3 | Complete |
-| AUDT-05 | Phase 3 | Pending |
+| AUDT-05 | Phase 3 | Complete |
 | AUDT-06 | Phase 3 | Complete |
 | ONBD-01 | Phase 4 | Pending |
 | ONBD-02 | Phase 4 | Pending |
@@ -217,7 +217,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DFNS-01 | Phase 7 | Pending |
 | DFNS-02 | Phase 7 | Pending |
 | DFNS-03 | Phase 6 | Pending |
-| DFNS-04 | Phase 3 | Pending |
+| DFNS-04 | Phase 3 | Complete |
 | DFNS-05 | Phase 4 | Pending |
 | AGNT-01 | Phase 4 | Pending |
 | AGNT-02 | Phase 4 | Pending |
