@@ -11,11 +11,11 @@
 ## Current Position
 
 **Phase:** 3 - Audit Pipeline
-**Plan:** 1 of 3 complete
+**Plan:** 2 of 3 complete
 **Status:** In progress
 
 ```
-[###-----] 25% (2/8 phases complete, 1/3 Phase 3 plans done)
+[###-----] 25% (2/8 phases complete, 2/3 Phase 3 plans done)
 ```
 
 ## Phase Status
@@ -24,7 +24,7 @@
 |-------|--------|-------|
 | 1. Plugin Scaffolding and Platform Portability | Complete | 2/2 plans complete |
 | 2. Patient CANS Schema and Activation Gate | Complete | 3/3 plans complete |
-| 3. Audit Pipeline | In progress | 1/3 plans complete |
+| 3. Audit Pipeline | In progress | 2/3 plans complete |
 | 4. Onboarding and Agent Configuration | Not started | TBD |
 | 5. Consent Engine | Not started | TBD |
 | 6. Secure Channel Protocol | Not started | TBD |
@@ -35,14 +35,15 @@
 
 | Metric | Value |
 |--------|-------|
-| Plans completed | 6 |
+| Plans completed | 7 |
 | Plans failed | 0 |
-| Requirements delivered | 19/69 |
+| Requirements delivered | 22/69 |
 | Test coverage | 87% (lines) |
 | Phase 02 P01 | 3min | 2 tasks | 3 files |
 | Phase 02 P02 | 7min | 2 tasks | 10 files |
 | Phase 02 P03 | 6min | 3 tasks | 8 files |
 | Phase 03 P01 | 5min | 2 tasks | 4 files |
+| Phase 03 P02 | 3min | 1 task | 3 files |
 
 ## Accumulated Context
 
@@ -77,6 +78,9 @@
 | Explicit JSON field ordering in append() | Prevents non-deterministic serialization that would break hash chain (RESEARCH.md Pitfall 2) | Phase 3 |
 | Flush timer unref'd | Prevents Node.js process from hanging on exit (RESEARCH.md Pitfall 3) | Phase 3 |
 | Coverage exclusions removed for implemented modules | entry-schema.ts and writer.ts are no longer stubs; coverage now measured accurately | Phase 3 |
+| AuditLogInput extended with correlation_id, summary, provider | Matches entry schema from Plan 01; provider actor needed for bilateral audit symmetry | Phase 3 |
+| logBlocked() wraps log() with denied/system defaults | Consistent blocked-action pattern across all call sites | Phase 3 |
+| Pipeline coverage exclusion removed | pipeline.ts no longer a stub; achieves 100% coverage | Phase 3 |
 
 ### Research Flags
 
@@ -116,11 +120,11 @@ None currently.
 
 ## Session Continuity
 
-**Last session:** 2026-02-22T02:37:15Z
-**Stopped At:** Completed 03-01-PLAN.md
-**What happened:** Executed Phase 3 Plan 01: TDD AuditWriter. Extended entry schema with correlation_id, summary, and provider actor. RED: 21 failing tests for hash chain, async buffering, verification, crash recovery, edge cases. GREEN: Async-buffered hash-chained JSONL writer with SHA-256 chain integrity. Removed coverage exclusions for implemented audit modules. All 187 tests pass (166 existing + 21 new).
-**Next action:** Execute Phase 3 Plan 02 (AuditPipeline)
+**Last session:** 2026-02-22T02:43:48Z
+**Stopped At:** Completed 03-02-PLAN.md
+**What happened:** Executed Phase 3 Plan 02: TDD AuditPipeline. RED: 27 failing tests for construction, entry enrichment, logBlocked, bilateral correlation, session/trace management, flush/verifyChain passthrough, dispose, data safety. GREEN: AuditPipeline implementation with session management, bilateral correlation, entry enrichment, and flush passthrough. Removed coverage exclusion for pipeline.ts. All 214 tests pass (187 existing + 27 new). pipeline.ts at 100% coverage.
+**Next action:** Execute Phase 3 Plan 03 (integrity-service)
 **Open questions:** None blocking.
 
 ---
-*Last updated: 2026-02-22T02:37:15Z*
+*Last updated: 2026-02-22T02:43:48Z*

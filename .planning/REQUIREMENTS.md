@@ -29,8 +29,8 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Audit Trail (AUDT)
 
 - [x] **AUDT-01**: Hash-chained JSONL append-only audit log in `.careagent/AUDIT.log`
-- [ ] **AUDT-02**: Every patient action (share, request, review, consent) logged with full context
-- [ ] **AUDT-03**: Every channel message (inbound and outbound) logged with bilateral audit entries
+- [x] **AUDT-02**: Every patient action (share, request, review, consent) logged with full context
+- [x] **AUDT-03**: Every channel message (inbound and outbound) logged with bilateral audit entries
 - [x] **AUDT-04**: Async buffered writes -- audit never blocks patient workflow
 - [ ] **AUDT-05**: Background integrity verification service validates hash chain
 - [x] **AUDT-06**: Patient owns and controls the audit log; audit entries log references, not raw health data content
@@ -177,8 +177,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PCANS-06 | Phase 2 | Complete |
 | PCANS-07 | Phase 2 | Complete |
 | AUDT-01 | Phase 3 | Complete |
-| AUDT-02 | Phase 3 | Pending |
-| AUDT-03 | Phase 3 | Pending |
+| AUDT-02 | Phase 3 | Complete |
+| AUDT-03 | Phase 3 | Complete |
 | AUDT-04 | Phase 3 | Complete |
 | AUDT-05 | Phase 3 | Pending |
 | AUDT-06 | Phase 3 | Complete |
