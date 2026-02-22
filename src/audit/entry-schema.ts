@@ -36,6 +36,7 @@ export const AuditEntrySchema = Type.Object({
   actor: Type.Union([
     Type.Literal('agent'),
     Type.Literal('patient'),
+    Type.Literal('provider'),
     Type.Literal('system'),
   ]),
   target: Type.Optional(Type.String()),
@@ -50,6 +51,8 @@ export const AuditEntrySchema = Type.Object({
   details: Type.Optional(Type.Record(Type.String(), Type.Unknown())),
   blocked_reason: Type.Optional(Type.String()),
   blocking_layer: Type.Optional(Type.String()),
+  correlation_id: Type.Optional(Type.String()),
+  summary: Type.Optional(Type.String()),
   prev_hash: Type.Union([Type.String(), Type.Null()]),
 });
 
