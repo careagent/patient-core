@@ -30,8 +30,7 @@ export default defineConfig({
         'src/index.ts',
         // Entry point core.ts is re-export only (no executable logic)
         'src/entry/core.ts',
-        // Audit pipeline is a Phase 3 stub (throws on all methods)
-        'src/audit/pipeline.ts',
+        // Audit pipeline.ts is no longer a stub (implemented in 03-02)
       ],
       thresholds: {
         lines: 80,
