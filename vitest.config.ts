@@ -21,8 +21,6 @@ export default defineConfig({
         'src/cli/status-command.ts',
         'src/cli/io.ts',
         'src/cli/prompts.ts',
-        'src/audit/entry-schema.ts',
-        'src/audit/writer.ts',
         'src/audit/integrity-service.ts',
         // Types-only and re-export modules (no executable code)
         'src/hardening/types.ts',
