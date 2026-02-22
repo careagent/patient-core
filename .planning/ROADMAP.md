@@ -63,7 +63,11 @@ Plans:
   3. Background integrity verification detects a corrupted or missing chain link and reports the break point
   4. Audit entries log action references and metadata, not raw health data content (patient owns the log without it becoming a data exfiltration vector)
   5. The pipeline supports bilateral audit correlation IDs so both patient and provider sides can reference the same interaction
-**Plans:** TBD
+**Plans:** 3 plans
+Plans:
+- [ ] 03-01-PLAN.md -- TDD async-buffered hash-chained AuditWriter and entry schema extension
+- [ ] 03-02-PLAN.md -- TDD AuditPipeline with session management, bilateral correlation, and flush
+- [ ] 03-03-PLAN.md -- TDD integrity background service, entry point wiring, coverage config update
 
 ### Phase 4: Onboarding and Agent Configuration
 **Goal:** A new patient completes a guided interview, gets a working dedicated agent with CANS.md and configured workspace, and can check their status
