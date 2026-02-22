@@ -28,12 +28,12 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Audit Trail (AUDT)
 
-- [ ] **AUDT-01**: Hash-chained JSONL append-only audit log in `.careagent/AUDIT.log`
+- [x] **AUDT-01**: Hash-chained JSONL append-only audit log in `.careagent/AUDIT.log`
 - [ ] **AUDT-02**: Every patient action (share, request, review, consent) logged with full context
 - [ ] **AUDT-03**: Every channel message (inbound and outbound) logged with bilateral audit entries
-- [ ] **AUDT-04**: Async buffered writes -- audit never blocks patient workflow
+- [x] **AUDT-04**: Async buffered writes -- audit never blocks patient workflow
 - [ ] **AUDT-05**: Background integrity verification service validates hash chain
-- [ ] **AUDT-06**: Patient owns and controls the audit log; audit entries log references, not raw health data content
+- [x] **AUDT-06**: Patient owns and controls the audit log; audit entries log references, not raw health data content
 
 ### Onboarding (ONBD)
 
@@ -176,12 +176,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PCANS-05 | Phase 2 | Complete |
 | PCANS-06 | Phase 2 | Complete |
 | PCANS-07 | Phase 2 | Complete |
-| AUDT-01 | Phase 3 | Pending |
+| AUDT-01 | Phase 3 | Complete |
 | AUDT-02 | Phase 3 | Pending |
 | AUDT-03 | Phase 3 | Pending |
-| AUDT-04 | Phase 3 | Pending |
+| AUDT-04 | Phase 3 | Complete |
 | AUDT-05 | Phase 3 | Pending |
-| AUDT-06 | Phase 3 | Pending |
+| AUDT-06 | Phase 3 | Complete |
 | ONBD-01 | Phase 4 | Pending |
 | ONBD-02 | Phase 4 | Pending |
 | ONBD-03 | Phase 4 | Pending |

@@ -10,12 +10,12 @@
 
 ## Current Position
 
-**Phase:** 2 - Patient CANS Schema and Activation Gate
-**Plan:** 3 of 3 complete
-**Status:** Milestone complete
+**Phase:** 3 - Audit Pipeline
+**Plan:** 1 of 3 complete
+**Status:** In progress
 
 ```
-[###-----] 25% (2/8 phases complete, 3/3 Phase 2 plans done)
+[###-----] 25% (2/8 phases complete, 1/3 Phase 3 plans done)
 ```
 
 ## Phase Status
@@ -24,7 +24,7 @@
 |-------|--------|-------|
 | 1. Plugin Scaffolding and Platform Portability | Complete | 2/2 plans complete |
 | 2. Patient CANS Schema and Activation Gate | Complete | 3/3 plans complete |
-| 3. Audit Pipeline | Not started | TBD |
+| 3. Audit Pipeline | In progress | 1/3 plans complete |
 | 4. Onboarding and Agent Configuration | Not started | TBD |
 | 5. Consent Engine | Not started | TBD |
 | 6. Secure Channel Protocol | Not started | TBD |
@@ -35,13 +35,14 @@
 
 | Metric | Value |
 |--------|-------|
-| Plans completed | 5 |
+| Plans completed | 6 |
 | Plans failed | 0 |
-| Requirements delivered | 16/69 |
-| Test coverage | 93% (lines) |
+| Requirements delivered | 19/69 |
+| Test coverage | 87% (lines) |
 | Phase 02 P01 | 3min | 2 tasks | 3 files |
 | Phase 02 P02 | 7min | 2 tasks | 10 files |
 | Phase 02 P03 | 6min | 3 tasks | 8 files |
+| Phase 03 P01 | 5min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -72,6 +73,10 @@
 | Removed Phase 1 scope.permitted_actions placeholder | No corresponding field in real CANSDocument schema | Phase 2 |
 | Integrity check BEFORE schema validation in gate pipeline | Tampered-but-schema-valid CANS.md must fail on integrity, not schema; prevents bypass | Phase 2 |
 | No audit for silent no-cans case | CONTEXT.md: no mention of clinical mode when CANS.md absent; gate returns silently | Phase 2 |
+| Constructor options for flush threshold/interval | Enables testability with low thresholds while keeping production defaults (10 entries, 1000ms) | Phase 3 |
+| Explicit JSON field ordering in append() | Prevents non-deterministic serialization that would break hash chain (RESEARCH.md Pitfall 2) | Phase 3 |
+| Flush timer unref'd | Prevents Node.js process from hanging on exit (RESEARCH.md Pitfall 3) | Phase 3 |
+| Coverage exclusions removed for implemented modules | entry-schema.ts and writer.ts are no longer stubs; coverage now measured accurately | Phase 3 |
 
 ### Research Flags
 
@@ -111,11 +116,11 @@ None currently.
 
 ## Session Continuity
 
-**Last session:** 2026-02-22T02:08:22.886Z
-**Stopped At:** Phase 3 context gathered
-**What happened:** Executed Phase 2 Plan 02: TDD activation gate pipeline. RED: 17 failing gate tests covering all 5 pipeline steps. GREEN: async gate.check() with short-circuit pipeline (presence, parse, discriminator, integrity, schema). Updated both entry points to async. Removed activation coverage exclusions. All 166 tests pass. Plan 03 was executed in parallel.
-**Next action:** Plan and execute Phase 3 (Audit Pipeline)
+**Last session:** 2026-02-22T02:37:15Z
+**Stopped At:** Completed 03-01-PLAN.md
+**What happened:** Executed Phase 3 Plan 01: TDD AuditWriter. Extended entry schema with correlation_id, summary, and provider actor. RED: 21 failing tests for hash chain, async buffering, verification, crash recovery, edge cases. GREEN: Async-buffered hash-chained JSONL writer with SHA-256 chain integrity. Removed coverage exclusions for implemented audit modules. All 187 tests pass (166 existing + 21 new).
+**Next action:** Execute Phase 3 Plan 02 (AuditPipeline)
 **Open questions:** None blocking.
 
 ---
-*Last updated: 2026-02-21T22:40:25Z*
+*Last updated: 2026-02-22T02:37:15Z*
