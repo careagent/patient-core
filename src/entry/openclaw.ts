@@ -14,6 +14,7 @@
 
 import { createAdapter } from '../adapters/detect.js';
 import { ActivationGate } from '../activation/gate.js';
+import { createAuditIntegrityService } from '../audit/integrity-service.js';
 import { AuditPipeline } from '../audit/pipeline.js';
 import { registerCLI } from '../cli/commands.js';
 import { createHardeningEngine } from '../hardening/engine.js';
@@ -104,9 +105,14 @@ export default async function register(api: unknown): Promise<void> {
     adapter.log('warn', `[CareAgent] Hardening engine activation failed: ${msg}`);
   }
 
-  // Step 8: Register background services (audit integrity, canary)
-  // Audit integrity service is a stub (Phase 3) -- skip registration to avoid crash
-  // Background services will be registered when their implementations are ready
+  // Step 8: Register background services
+  try {
+    const integrityService = createAuditIntegrityService(audit, adapter);
+    adapter.registerBackgroundService(integrityService);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    adapter.log('warn', `[CareAgent] Audit integrity service registration failed: ${msg}`);
+  }
 
   // Step 9: Load skills (Phase 7 -- not yet available)
   // Skills loading is deferred until Phase 7 implementation

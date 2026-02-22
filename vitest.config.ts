@@ -21,7 +21,6 @@ export default defineConfig({
         'src/cli/status-command.ts',
         'src/cli/io.ts',
         'src/cli/prompts.ts',
-        'src/audit/integrity-service.ts',
         // Types-only and re-export modules (no executable code)
         'src/hardening/types.ts',
         'src/hardening/index.ts',
@@ -30,7 +29,6 @@ export default defineConfig({
         'src/index.ts',
         // Entry point core.ts is re-export only (no executable logic)
         'src/entry/core.ts',
-        // Audit pipeline.ts is no longer a stub (implemented in 03-02)
       ],
       thresholds: {
         lines: 80,
