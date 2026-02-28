@@ -265,12 +265,14 @@ describe('processInput (State Machine)', () => {
       expect(result.response).toBe(ALREADY_ENROLLED_MESSAGE);
     });
 
-    it('NPI input returns pairing stub', () => {
+    it('NPI input returns search message with NPI and sets discoveryNpi', () => {
       const session = makeSession('ENROLLED');
       const result = processInput(session, '1234567890');
 
       expect(result.nextState).toBe('ENROLLED');
-      expect(result.response).toBe(PAIRING_STUB_MESSAGE);
+      expect(result.response).toContain('1234567890');
+      expect(result.response).toContain('Searching');
+      expect(result.discoveryNpi).toBe('1234567890');
     });
 
     it('non-NPI input prompts for NPI', () => {

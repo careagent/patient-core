@@ -57,6 +57,7 @@ export {
   INVALID_CONSENT_MESSAGE,
   INVALID_NAME_MESSAGE,
   PAIRING_STUB_MESSAGE,
+  PAIRING_SEARCH_MESSAGE,
 } from './state-machine.js';
 
 export type { TransitionResult } from './state-machine.js';

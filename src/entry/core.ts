@@ -104,3 +104,40 @@ export type {
 // CANS generator
 export { generateCANS } from '../onboarding/cans-generator.js';
 export type { CANSGeneratorInput } from '../onboarding/cans-generator.js';
+
+// Discovery (Axon registry + handshake)
+export {
+  RegistryEntrySchema,
+  ConnectRequestSchema,
+  SignedMessageSchema,
+  ConnectGrantSchema,
+  ConnectDenialSchema,
+  DiscoveryResultSchema,
+  HandshakeResultSchema,
+  RegistryEntryValidator,
+  ConnectGrantValidator,
+  ConnectDenialValidator,
+  createAxonClient,
+  createDiscoveryHandshake,
+  publicKeyToBase64Url,
+  privateKeyToBase64Url,
+  signPayload as signDiscoveryPayload,
+  verifySignature as verifyDiscoverySignature,
+  generateNonce,
+} from '../discovery/index.js';
+
+export type {
+  RegistryEntry,
+  ConnectRequest,
+  ConnectGrant,
+  ConnectDenial,
+  DenialCode,
+  DiscoveryResult,
+  HandshakeResult,
+  AxonClient,
+  AxonClientConfig,
+  DiscoveryHandshake,
+  DiscoveryHandshakeConfig,
+  DiscoveryAndHandshakeResult,
+  HandshakeLedgerEntry,
+} from '../discovery/index.js';

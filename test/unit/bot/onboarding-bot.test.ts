@@ -294,7 +294,7 @@ describe('OnboardingBot', () => {
       // Enter NPI
       await bot.handleUpdate(makeUpdate(chatId, '1234567890', 4));
       const messages = transport.getSentMessages();
-      expect(messages[3].text).toContain('pairing');
+      expect(messages[3].text).toContain('Searching');
     });
   });
 

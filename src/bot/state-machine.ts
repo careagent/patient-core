@@ -47,8 +47,10 @@ export const INVALID_CONSENT_MESSAGE =
 export const INVALID_NAME_MESSAGE =
   'Please enter a valid name (at least 1 character, letters and spaces only).';
 
-export const PAIRING_STUB_MESSAGE =
-  'Provider pairing is not yet available. It will be implemented in a future session.';
+export const PAIRING_SEARCH_MESSAGE =
+  'Searching for provider with NPI {npi}...';
+
+export const PAIRING_STUB_MESSAGE = PAIRING_SEARCH_MESSAGE;
 
 // ---------------------------------------------------------------------------
 // Input Parsing
@@ -94,6 +96,8 @@ export interface TransitionResult {
   enrollmentData?: {
     patientName: string;
   };
+  /** Set when an enrolled patient enters an NPI -- signals caller to run discovery. */
+  discoveryNpi?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -147,7 +151,11 @@ export function processInput(session: PatientSession, text: string): TransitionR
 
     case 'ENROLLED':
       if (isNpi(input)) {
-        return { nextState: 'ENROLLED', response: PAIRING_STUB_MESSAGE };
+        return {
+          nextState: 'ENROLLED',
+          response: PAIRING_SEARCH_MESSAGE.replace('{npi}', input.trim()),
+          discoveryNpi: input.trim(),
+        };
       }
       return {
         nextState: 'ENROLLED',

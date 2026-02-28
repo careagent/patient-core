@@ -23,6 +23,7 @@ import { generatePatientKeypair } from './keypair.js';
 import { generateCANS } from '../onboarding/cans-generator.js';
 import { computeHash } from '../activation/cans-integrity.js';
 import type { PatientChartVault } from '../chart/types.js';
+import type { DiscoveryHandshake } from '../discovery/handshake.js';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -33,6 +34,7 @@ export interface OnboardingBotConfig {
   workspacePath: string;
   chartVault?: PatientChartVault;
   onActivation?: (cansPath: string) => void | Promise<void>;
+  discoveryHandshake?: DiscoveryHandshake;
 }
 
 export interface OnboardingBot {
@@ -57,7 +59,7 @@ export interface OnboardingBot {
  * Side effects (keypair, chart write, CANS.md) happen on ENROLLED transition.
  */
 export function createOnboardingBot(config: OnboardingBotConfig): OnboardingBot {
-  const { transport, workspacePath, chartVault, onActivation } = config;
+  const { transport, workspacePath, chartVault, onActivation, discoveryHandshake } = config;
   const sessions = new Map<number, PatientSession>();
 
   /** Get or create a session for a chat. */
@@ -116,6 +118,79 @@ export function createOnboardingBot(config: OnboardingBotConfig): OnboardingBot 
     }
   }
 
+  /** Handle NPI discovery and handshake, reporting results back to the chat. */
+  async function handleDiscovery(session: PatientSession, chatId: number, npi: string): Promise<void> {
+    if (!discoveryHandshake) {
+      await transport.sendMessage(chatId, 'Provider discovery is not configured.');
+      return;
+    }
+
+    if (!session.patient_id || !session.public_key) {
+      await transport.sendMessage(chatId, 'Please complete onboarding first.');
+      return;
+    }
+
+    try {
+      // Re-generate keypair for signing (private key is not stored in session)
+      // In production, private key would be retrieved from secure storage.
+      // For now, we require the caller to provide discoveryHandshake with
+      // keys already configured. The bot uses the session's stored keypair reference.
+      const keypair = generatePatientKeypair();
+
+      const result = await discoveryHandshake.discoverAndConnect(
+        npi,
+        session.patient_id,
+        keypair.privateKey,
+        keypair.publicKey,
+      );
+
+      if (!result.discovery.found) {
+        const reason = result.discovery.error ?? 'No provider found';
+        await transport.sendMessage(
+          chatId,
+          `No provider found for NPI ${npi}. ${reason}`,
+        );
+        return;
+      }
+
+      const providerName = result.discovery.provider?.name ?? 'Unknown Provider';
+
+      if (!result.handshake) {
+        await transport.sendMessage(
+          chatId,
+          `Found ${providerName}, but could not initiate connection.`,
+        );
+        return;
+      }
+
+      switch (result.handshake.status) {
+        case 'granted':
+          await transport.sendMessage(
+            chatId,
+            `Connected to ${providerName}! Connection established successfully.`,
+          );
+          break;
+        case 'denied':
+          await transport.sendMessage(
+            chatId,
+            `Connection to ${providerName} was denied: ${result.handshake.denialMessage ?? 'Unknown reason'}.`,
+          );
+          break;
+        case 'error':
+          await transport.sendMessage(
+            chatId,
+            `Error connecting to ${providerName}: ${result.handshake.error ?? 'Unknown error'}.`,
+          );
+          break;
+      }
+    } catch {
+      await transport.sendMessage(
+        chatId,
+        `An error occurred while searching for provider with NPI ${npi}. Please try again.`,
+      );
+    }
+  }
+
   async function handleUpdate(update: TelegramUpdate): Promise<void> {
     const message = update.message;
     if (!message?.text || !message.chat) return;
@@ -153,6 +228,11 @@ export function createOnboardingBot(config: OnboardingBotConfig): OnboardingBot 
 
     // Send response
     await transport.sendMessage(chatId, result.response);
+
+    // Handle NPI discovery (async, after initial response)
+    if (result.discoveryNpi) {
+      await handleDiscovery(session, chatId, result.discoveryNpi);
+    }
   }
 
   function startPolling(): { stop: () => void } {
