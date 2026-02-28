@@ -76,3 +76,31 @@ export { createProtocolServer } from '../protocol/index.js';
 
 // Chart
 export type { PatientChartVault, ChartOperationResult } from '../chart/types.js';
+
+// Bot (Telegram onboarding)
+export {
+  OnboardingStateSchema,
+  TelegramUpdateSchema,
+  PatientSessionSchema,
+  StateTransitionSchema,
+  createTelegramTransport,
+  createMockTransport,
+  processInput,
+  createOnboardingBot,
+  generatePatientKeypair,
+} from '../bot/index.js';
+
+export type {
+  OnboardingState,
+  TelegramUpdate,
+  PatientSession,
+  StateTransition,
+  TelegramTransport,
+  OnboardingBot,
+  OnboardingBotConfig,
+  PatientKeypair,
+} from '../bot/index.js';
+
+// CANS generator
+export { generateCANS } from '../onboarding/cans-generator.js';
+export type { CANSGeneratorInput } from '../onboarding/cans-generator.js';
