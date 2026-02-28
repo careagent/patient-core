@@ -46,7 +46,7 @@ export { checkToolPolicy } from '../hardening/index.js';
 export { checkExecAllowlist } from '../hardening/index.js';
 export { checkCansInjection, extractProtocolRules, injectProtocol } from '../hardening/index.js';
 export { checkDockerSandbox, detectDocker } from '../hardening/index.js';
-export { checkConsentGate } from '../hardening/index.js';
+export { checkConsentGate, attachConsentEngine, detachConsentEngine, mapToolToAction } from '../hardening/index.js';
 export { checkDataMinimization } from '../hardening/index.js';
 export { setupCanary } from '../hardening/index.js';
 export type { CanaryHandle } from '../hardening/canary.js';
@@ -73,6 +73,32 @@ export { createNeuronClient } from '../neuron/index.js';
 // Protocol
 export type { ProtocolServer, ProtocolSession } from '../protocol/index.js';
 export { createProtocolServer } from '../protocol/index.js';
+
+// Consent
+export {
+  ConsentActionSchema,
+  ConsentPostureSchema,
+  HealthLiteracyLevelSchema,
+  ConsentRecordSchema,
+  ConsentDecisionSchema,
+  ConsentPromptSchema,
+  CustomConsentRuleSchema,
+  ConsentEngineConfigSchema,
+  createConsentEngine,
+  generateConsentPrompt,
+} from '../consent/index.js';
+
+export type {
+  ConsentAction,
+  ConsentPosture,
+  HealthLiteracyLevel,
+  ConsentRecord,
+  ConsentDecision,
+  ConsentPrompt,
+  CustomConsentRule,
+  ConsentEngineConfig,
+  ConsentEngine,
+} from '../consent/index.js';
 
 // Chart
 export type { PatientChartVault, ChartOperationResult } from '../chart/types.js';

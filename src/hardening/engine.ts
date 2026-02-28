@@ -2,8 +2,8 @@
  * Hardening engine orchestrator -- composes all 6 layers with short-circuit-on-deny.
  *
  * Patient-core extends provider-core's 4-layer engine with 2 additional
- * patient-specific layers: consent-gate and data-minimization (allow-all
- * stubs until Phase 5).
+ * patient-specific layers: consent-gate (per-action consent enforcement)
+ * and data-minimization (allow-all stub until specification).
  *
  * Hardening is always on (deterministic, hardcoded in plugin) -- not
  * configurable via CANS.

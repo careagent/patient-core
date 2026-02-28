@@ -6,7 +6,7 @@ Patient-core is the **patient-governed clinical agent** for the CareAgent ecosys
 
 ## The Irreducible Risk Hypothesis
 
-Clinical AI agents carry irreducible risk of harm. Patient-core manages this risk as the **patient's autonomous advocate** -- it enforces the patient's consent posture on every tool call, gates all provider interactions through the trust list, and applies data minimization to outbound information sharing. Layers 5-6 (consent-gate, data-minimization) are currently allow-all stubs awaiting Phase 5 implementation, but the layer slots exist and are wired into the pipeline. The patient's CANS.md (`identity_type: 'patient'`) is the single source of truth for behavioral configuration.
+Clinical AI agents carry irreducible risk of harm. Patient-core manages this risk as the **patient's autonomous advocate** -- it enforces the patient's consent posture on every tool call, gates all provider interactions through the trust list, and applies data minimization to outbound information sharing. Layer 5 (consent-gate) enforces deny-by-default, allow-trusted, or custom postures with per-action consent, expiration, and revocation. Layer 6 (data-minimization) is an allow-all stub awaiting specification. The patient's CANS.md (`identity_type: 'patient'`) is the single source of truth for behavioral configuration.
 
 ## Directory Structure
 
@@ -21,6 +21,7 @@ patient-core/
     audit/               # Append-only audit pipeline + entry schema
     chart/               # Chart integration types
     cli/                 # CLI commands (init, status)
+    consent/             # Consent engine (schemas, engine, prompts)
     credentials/         # Credential validator
     entry/               # Entry points (openclaw.ts, standalone.ts, core.ts)
     hardening/           # 6-layer security engine (extends provider-core's 4)
@@ -72,7 +73,7 @@ pnpm clean             # Remove dist/
 - **Do NOT bypass the consent posture.** If `consent_posture` is `'deny'`, every action requires explicit consent. If `'allow'`, only explicitly denied actions are blocked.
 - **Do NOT store PHI in CANS.md.** CANS.md contains NO personal health information and NO personally identifiable information. All health data resides in the patient chart (patient-chart package).
 - **Do NOT skip trust list validation** for provider interactions. Only providers with `trust_level: 'active'` in the trust list can interact.
-- **Do NOT implement Layers 5-6 beyond stubs** until Phase 5 specification is complete. The current allow-all stubs are intentional.
+- **Do NOT implement Layer 6 beyond stub** until Phase 5 specification is complete. The current allow-all stub for data-minimization is intentional.
 - **Do NOT modify scope fields via refinement proposals.** Identity, consent posture, and trust list entries are protected.
 - **Do NOT use relative imports without `.js` extension.** ESM requires explicit extensions.
 
@@ -98,7 +99,7 @@ pnpm clean             # Remove dist/
 2. **Exec Allowlist** -- restrict shell/exec commands
 3. **CANS Injection** -- inject protocol rules from CANS.md
 4. **Docker Sandbox** -- container isolation enforcement
-5. **Consent Gate** -- (stub, Phase 5) per-action consent checking against consent posture
+5. **Consent Gate** -- per-action consent checking against consent posture (deny-all, allow-trusted, custom)
 6. **Data Minimization** -- (stub, Phase 5) outbound data filtering
 
 All 6 layers are wired into the pipeline and execute in order with short-circuit-on-deny.

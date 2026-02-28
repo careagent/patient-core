@@ -6,10 +6,10 @@
  * - Execution approval gates (exec binary allowlist)
  * - CANS protocol injection into system prompt
  * - Docker sandbox detection (report-only)
- * - Consent gate (allow-all stub -- Phase 5)
+ * - Consent gate (per-action consent engine with posture enforcement)
  * - Data minimization (allow-all stub -- Phase 5)
  *
- * Mirrors provider-core's 4 layers and adds 2 patient-specific stubs.
+ * Mirrors provider-core's 4 layers and adds 2 patient-specific layers.
  */
 
 import type { CANSDocument } from '../activation/cans-schema.js';
