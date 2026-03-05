@@ -39,6 +39,7 @@
     }
   },
   "devDependencies": {
+    "@careagent/patient-chart": "file:../patient-chart",
     "@sinclair/typebox": "~0.34.0",
     "@types/node": "^22.19.11",
     "@vitest/coverage-v8": "~4.0.0",
@@ -55,5 +56,8 @@
     "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@careagent/a2a-types": "file:../shared"
   }
 }

@@ -100,11 +100,13 @@ describe('Plugin Registration Integration', () => {
   // -----------------------------------------------------------------------
 
   describe('Manifest verification', () => {
-    it('package.json has no runtime dependencies', () => {
+    it('package.json has only approved runtime dependencies', () => {
       const pkgPath = join(__dirname, '../../package.json');
       const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'));
       const deps = pkg.dependencies || {};
-      expect(Object.keys(deps).length).toBe(0);
+      const approved = ['@careagent/a2a-types'];
+      const unapproved = Object.keys(deps).filter((d) => !approved.includes(d));
+      expect(unapproved).toEqual([]);
     });
 
     it('package.json openclaw.extensions points to ./dist/index.js', () => {

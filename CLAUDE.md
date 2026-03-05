@@ -117,3 +117,17 @@ Trust levels: `pending` (handshake in progress), `active` (full access), `suspen
 - **OpenClaw** (`src/adapters/openclaw/`) -- runs as an OpenClaw plugin (peer dep `>=2026.1.0`)
 - **Standalone** (`src/adapters/standalone/`) -- runs as an independent Node.js process
 - Auto-detection via `src/adapters/detect.ts`
+
+### A2A Protocol Integration (Planned)
+
+Patient-core is becoming an **A2A Client**. This means:
+
+- **A2A Client** -- sends requests to Axon (enrollment, discovery) and Neuron (provider interactions)
+- **Provider discovery via Agent Cards** -- discover providers through Axon's A2A Agent Card registry
+- **Consent engine integrated with A2A** -- consent posture enforced on A2A Task interactions
+- **Encrypted communication** -- patient-chart encryption integrated with A2A message payloads
+- **Health-literacy onboarding** -- enrollment flow via A2A Tasks with Axon
+
+The existing consent engine, hardening layers, trust list management, and CANS.md activation are preserved. A2A replaces the transport layer, not the patient governance.
+
+**SDK:** `@a2a-js/sdk` (v0.3.10, published by Google). Wrap in an adapter layer to insulate from pre-1.0 API changes.
