@@ -70,7 +70,7 @@ describe('createOpenClawAdapter', () => {
     expect(() => adapter.onAgentBootstrap(() => {})).not.toThrow();
     expect(() => adapter.registerCliCommand({ name: 'test', description: 'test', handler: () => {} })).not.toThrow();
     expect(() => adapter.registerBackgroundService({ id: 'test', start: () => {} })).not.toThrow();
-    expect(() => adapter.registerSlashCommand({ name: 'test', description: 'test', handler: () => Promise.resolve() })).not.toThrow();
+    expect(() => adapter.registerSlashCommand({ name: 'test', description: 'test', handler: async () => ({ text: 'ok' }) })).not.toThrow();
     expect(() => adapter.registerHook('test', () => {})).not.toThrow();
     expect(() => adapter.log('info', 'test')).not.toThrow();
   });
@@ -101,7 +101,7 @@ describe('createOpenClawAdapter', () => {
   it('registerSlashCommand calls raw.registerCommand', () => {
     const registerCommand = vi.fn();
     const adapter = createOpenClawAdapter({ registerCommand });
-    adapter.registerSlashCommand({ name: '/test', description: 'test', handler: async () => {} });
+    adapter.registerSlashCommand({ name: '/test', description: 'test', handler: async () => ({ text: 'ok' }) });
     expect(registerCommand).toHaveBeenCalled();
   });
 
@@ -155,7 +155,7 @@ describe('createOpenClawAdapter', () => {
     const adapter = createOpenClawAdapter({
       registerCommand: () => { throw new Error('broken'); },
     });
-    expect(() => adapter.registerSlashCommand({ name: '/test', description: 'test', handler: async () => {} })).not.toThrow();
+    expect(() => adapter.registerSlashCommand({ name: '/test', description: 'test', handler: async () => ({ text: 'ok' }) })).not.toThrow();
   });
 
   it('registerHook handles internal error gracefully', () => {

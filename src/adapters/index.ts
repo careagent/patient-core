@@ -12,6 +12,7 @@ export type {
   CliCommandConfig,
   ServiceConfig,
   SlashCommandConfig,
+  SlashCommandContext,
 } from './types.js';
 
 export { createAdapter } from './detect.js';

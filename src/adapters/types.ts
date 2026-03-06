@@ -48,11 +48,19 @@ export interface ServiceConfig {
   stop?: () => void | Promise<void>;
 }
 
+/** Context passed to slash command handlers. */
+export interface SlashCommandContext {
+  /** Raw arguments after the slash command. */
+  args: string;
+  /** Sender ID (e.g., Telegram peer ID). */
+  senderId?: string;
+}
+
 /** Configuration for registering a slash command. */
 export interface SlashCommandConfig {
   name: string;
   description: string;
-  handler: (args: string) => void | Promise<void>;
+  handler: (ctx: SlashCommandContext) => Promise<{ text: string; isError?: boolean }> | { text: string; isError?: boolean };
 }
 
 /**

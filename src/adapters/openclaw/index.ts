@@ -14,6 +14,7 @@ import type {
   CliCommandConfig,
   ServiceConfig,
   SlashCommandConfig,
+  SlashCommandContext,
 } from '../types.js';
 
 const TAG = '[CareAgent:Adapter]';
