@@ -1,10 +1,13 @@
 /**
  * Tests for PatientOnboarding — A2A-based patient enrollment flow.
+ *
+ * Updated to use the local form engine and data router instead of
+ * calling Axon's form engine.
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { PatientOnboarding } from '../../../src/a2a/onboarding.js';
-import type { PatientOnboardingData, OnboardingResult } from '../../../src/a2a/onboarding.js';
+import type { PatientOnboardingData } from '../../../src/a2a/onboarding.js';
 import type { MessageIO } from '../../../src/a2a/consent-broker.js';
 import type { PatientA2AClient } from '../../../src/a2a/client.js';
 import type { ChartBridge } from '../../../src/a2a/chart-bridge.js';
@@ -23,10 +26,6 @@ function makeMockIO(): MessageIO {
 function makeMockClient(): Partial<PatientA2AClient> {
   return {
     enroll: vi.fn().mockResolvedValue(undefined),
-    submitEnrollmentAnswer: vi.fn().mockResolvedValue({
-      id: 'enroll-task',
-      status: { state: 'completed' },
-    }),
   };
 }
 
@@ -41,10 +40,13 @@ const testPatientData: PatientOnboardingData = {
   name: 'Elizabeth Anderson',
   address: '1579 River Rd, Johns Island, SC 29455',
   phone: '+1 252 414 2043',
+  dateOfBirth: '1975-03-15',
   conditions: [
     { name: 'Hormone replacement therapy for menopause', status: 'active' },
     { name: 'Right leg sciatica', status: 'active' },
   ],
+  healthLiteracy: 'standard',
+  preferredLanguage: 'English',
 };
 
 // ---------------------------------------------------------------------------
@@ -75,7 +77,7 @@ describe('PatientOnboarding', () => {
     expect(result.error).toBeUndefined();
   });
 
-  it('enrolls with Axon via A2A', async () => {
+  it('records clinical data in the patient chart', async () => {
     const onboarding = new PatientOnboarding(
       client as PatientA2AClient,
       chartBridge as ChartBridge,
@@ -84,53 +86,23 @@ describe('PatientOnboarding', () => {
 
     await onboarding.run(testPatientData);
 
-    expect(client.enroll).toHaveBeenCalledWith({
-      name: 'Elizabeth Anderson',
-      consent_posture: 'deny',
-    });
+    // Should have at least identity + conditions entries
+    expect(chartBridge.recordInteraction).toHaveBeenCalled();
+    const callCount = (chartBridge.recordInteraction as ReturnType<typeof vi.fn>).mock.calls.length;
+    expect(callCount).toBeGreaterThanOrEqual(2);
   });
 
-  it('submits onboarding questionnaire', async () => {
+  it('generates CANS.md', async () => {
     const onboarding = new PatientOnboarding(
       client as PatientA2AClient,
       chartBridge as ChartBridge,
       io,
     );
 
-    await onboarding.run(testPatientData);
+    const result = await onboarding.run(testPatientData);
 
-    expect(client.submitEnrollmentAnswer).toHaveBeenCalledWith(
-      'patient_onboarding',
-      expect.objectContaining({
-        name: 'Elizabeth Anderson',
-        address: '1579 River Rd, Johns Island, SC 29455',
-        conditions: testPatientData.conditions,
-      }),
-    );
-  });
-
-  it('records each condition in the patient chart', async () => {
-    const onboarding = new PatientOnboarding(
-      client as PatientA2AClient,
-      chartBridge as ChartBridge,
-      io,
-    );
-
-    await onboarding.run(testPatientData);
-
-    expect(chartBridge.recordInteraction).toHaveBeenCalledTimes(2);
-
-    // First condition
-    const call1 = (chartBridge.recordInteraction as ReturnType<typeof vi.fn>).mock.calls[0];
-    expect(call1[0].id).toContain('hormone-replacement');
-    expect(call1[1]).toEqual({
-      provider_npi: 'self',
-      interaction_type: 'onboarding_finding',
-    });
-
-    // Second condition
-    const call2 = (chartBridge.recordInteraction as ReturnType<typeof vi.fn>).mock.calls[1];
-    expect(call2[0].id).toContain('right-leg-sciatica');
+    expect(result.cansPath).toBeDefined();
+    expect(result.cansPath).toContain('CANS.md');
   });
 
   it('displays progress messages to patient', async () => {
@@ -145,25 +117,7 @@ describe('PatientOnboarding', () => {
     const messages = (io.display as ReturnType<typeof vi.fn>).mock.calls.map(
       (c: unknown[]) => c[0] as string,
     );
-    expect(messages).toContain('Registering with CareAgent network...');
-    expect(messages).toContain('Registration complete.');
-    expect(messages.some((m: string) => m.includes('2 condition(s)'))).toBe(true);
-    expect(messages).toContain('Onboarding complete!');
-  });
-
-  it('returns error result on enrollment failure', async () => {
-    client.enroll = vi.fn().mockRejectedValue(new Error('Network failure'));
-
-    const onboarding = new PatientOnboarding(
-      client as PatientA2AClient,
-      chartBridge as ChartBridge,
-      io,
-    );
-
-    const result = await onboarding.run(testPatientData);
-
-    expect(result.success).toBe(false);
-    expect(result.error).toBe('Network failure');
+    expect(messages.some((m: string) => m.includes('Onboarding complete'))).toBe(true);
   });
 
   it('returns error result on chart recording failure', async () => {
@@ -179,5 +133,43 @@ describe('PatientOnboarding', () => {
 
     expect(result.success).toBe(false);
     expect(result.error).toBe('Vault locked');
+  });
+
+  describe('toFormAnswers', () => {
+    it('converts PatientOnboardingData to form answers', () => {
+      const answers = PatientOnboarding.toFormAnswers(testPatientData);
+
+      expect(answers['consent_synthetic']).toBe(true);
+      expect(answers['patient_name']).toBe('Elizabeth Anderson');
+      expect(answers['address']).toBe('1579 River Rd, Johns Island, SC 29455');
+      expect(answers['phone']).toBe('+1 252 414 2043');
+      expect(answers['has_conditions']).toBe(true);
+      expect(answers['conditions_list']).toContain('Hormone replacement therapy');
+      expect(answers['conditions_list']).toContain('Right leg sciatica');
+      expect(answers['health_literacy']).toBe('standard');
+    });
+
+    it('handles empty conditions', () => {
+      const answers = PatientOnboarding.toFormAnswers({
+        ...testPatientData,
+        conditions: [],
+      });
+
+      expect(answers['has_conditions']).toBe(false);
+      expect(answers['conditions_list']).toBeUndefined();
+    });
+
+    it('includes medications and allergies when present', () => {
+      const answers = PatientOnboarding.toFormAnswers({
+        ...testPatientData,
+        medications: 'Estradiol 1mg daily',
+        allergies: 'Penicillin',
+      });
+
+      expect(answers['has_medications']).toBe(true);
+      expect(answers['medications_list']).toBe('Estradiol 1mg daily');
+      expect(answers['has_allergies']).toBe(true);
+      expect(answers['allergies_list']).toBe('Penicillin');
+    });
   });
 });

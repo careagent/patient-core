@@ -14,21 +14,32 @@ import { stringifyYAML } from '../vendor/yaml/index.js';
 export interface CANSGeneratorInput {
   patient_id: string;
   public_key: string;
+  /** Override consent posture (default: 'deny'). */
+  consent_posture?: string;
+  /** Health literacy level from onboarding (default: 'standard'). */
+  health_literacy_level?: string;
+  /** Preferred language from onboarding (default: 'English'). */
+  preferred_language?: string;
 }
 
 /**
  * Generate CANS.md content from onboarding data.
  *
- * Creates a minimal CANS.md with deny-by-default consent posture.
+ * Creates a CANS.md with preferences from the onboarding questionnaire.
  * The generated file passes the activation gate's 5-step pipeline.
+ * PHI is never stored in CANS.md — only non-PHI preferences.
  */
 export function generateCANS(data: CANSGeneratorInput): string {
-  const frontmatter = {
+  const frontmatter: Record<string, unknown> = {
     schema_version: '1.0',
     identity_type: 'patient',
-    consent_posture: 'deny',
-    health_literacy_level: 'standard',
+    consent_posture: data.consent_posture ?? 'deny',
+    health_literacy_level: data.health_literacy_level ?? 'standard',
   };
+
+  if (data.preferred_language) {
+    frontmatter['preferred_language'] = data.preferred_language;
+  }
 
   const yaml = stringifyYAML(frontmatter).trim();
   const now = new Date().toISOString();

@@ -88,4 +88,48 @@ describe('generateCANS', () => {
     expect(parsed.schema_version).toBe('1.0');
     expect(parsed.health_literacy_level).toBe('standard');
   });
+
+  it('accepts custom health_literacy_level', () => {
+    const result = generateCANS({
+      patient_id: 'test-uuid',
+      public_key: 'base64key==',
+      health_literacy_level: 'simplified',
+    });
+
+    expect(result).toContain('health_literacy_level: simplified');
+  });
+
+  it('accepts custom consent_posture', () => {
+    const result = generateCANS({
+      patient_id: 'test-uuid',
+      public_key: 'base64key==',
+      consent_posture: 'allow',
+    });
+
+    expect(result).toContain('consent_posture: allow');
+  });
+
+  it('includes preferred_language when provided', async () => {
+    const result = generateCANS({
+      patient_id: 'test-uuid',
+      public_key: 'base64key==',
+      preferred_language: 'Spanish',
+    });
+
+    expect(result).toContain('preferred_language: Spanish');
+
+    const { parseYAML } = await import('../../../src/vendor/yaml/index.js');
+    const match = result.match(/^---\n([\s\S]*?)\n---/);
+    const parsed = parseYAML(match![1]);
+    expect(parsed.preferred_language).toBe('Spanish');
+  });
+
+  it('omits preferred_language when not provided', () => {
+    const result = generateCANS({
+      patient_id: 'test-uuid',
+      public_key: 'base64key==',
+    });
+
+    expect(result).not.toContain('preferred_language');
+  });
 });

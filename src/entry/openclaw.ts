@@ -11,7 +11,7 @@
  * degradation (PLUG-05). The plugin MUST NOT crash the host platform.
  */
 
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { createAdapter } from '../adapters/detect.js';
 import { ActivationGate } from '../activation/gate.js';
@@ -23,6 +23,8 @@ import { PatientA2AClient } from '../a2a/client.js';
 import { ConsentBroker } from '../a2a/consent-broker.js';
 import { ChartBridge } from '../a2a/chart-bridge.js';
 import { PatientOnboarding } from '../a2a/onboarding.js';
+import { OnboardingEngine } from '../onboarding/engine.js';
+import { ENTRIES_FILENAME } from '@careagent/patient-chart';
 import type { SlashCommandContext, PlatformAdapter } from '../adapters/types.js';
 
 export default async function register(api: unknown): Promise<void> {
@@ -178,36 +180,62 @@ function registerPatientSlashCommands(
 ): void {
   const { a2aClient, consentBroker, chartBridge, workspacePath, neuronUrl, audit } = modules;
 
-  // /careagent_on — run patient onboarding
+  // /careagent_on — run patient onboarding (interactive)
   adapter.registerSlashCommand({
     name: 'careagent_on',
     description: 'Activate CareAgent patient mode',
-    handler: async (ctx: SlashCommandContext) => {
+    handler: async (_ctx: SlashCommandContext) => {
+      const cansPath = join(workspacePath, 'CANS.md');
+      const entriesPath = join(modules.vaultDir, 'ledger', ENTRIES_FILENAME);
+
+      // Already onboarded — check both CANS.md and vault entries
+      if (existsSync(cansPath) && existsSync(entriesPath)) {
+        return { text: 'CareAgent patient mode is already active.' };
+      }
+
+      // Interactive onboarding not yet supported in slash command model
+      // (requires multi-turn message routing). Use /careagent_test for E2E.
+      return {
+        text: [
+          'Patient onboarding requires interactive input.',
+          'Use /careagent_test to run onboarding with test data.',
+          'Interactive Telegram onboarding coming soon.',
+        ].join('\n'),
+      };
+    },
+  });
+
+  // /careagent_test — run onboarding with Elizabeth Anderson test data
+  adapter.registerSlashCommand({
+    name: 'careagent_test',
+    description: 'Run patient onboarding with synthetic test data (E2E)',
+    handler: async (_ctx: SlashCommandContext) => {
       const cansPath = join(workspacePath, 'CANS.md');
 
       // Already onboarded
       if (existsSync(cansPath)) {
-        return { text: 'CareAgent patient mode is already active.' };
+        return { text: 'CareAgent patient mode is already active. Remove CANS.md to re-onboard.' };
       }
 
-      // Create MessageIO for the onboarding flow
       const messages: string[] = [];
       const messageIO = {
         display: (text: string) => { messages.push(text); },
-        confirm: async (_prompt: string) => true, // Auto-confirm for onboarding
+        confirm: async (_prompt: string) => true,
       };
 
       const onboarding = new PatientOnboarding(a2aClient, chartBridge, messageIO);
 
-      // Run onboarding with Elizabeth Anderson's data (acceptance test)
       const result = await onboarding.run({
         name: 'Elizabeth Anderson',
         address: '1579 River Rd, Johns Island, SC 29455',
         phone: '+1 252 414 2043',
+        dateOfBirth: '1975-03-15',
         conditions: [
           { name: 'Hormone replacement therapy for menopause', status: 'active' },
           { name: 'Right leg sciatica', status: 'active' },
         ],
+        healthLiteracy: 'standard',
+        preferredLanguage: 'English',
       });
 
       audit.log({
@@ -217,6 +245,7 @@ function registerPatientSlashCommands(
         details: {
           cans_path: result.cansPath,
           vault_path: result.vaultPath,
+          entry_count: result.entryCount,
           error: result.error,
         },
       });
@@ -224,9 +253,10 @@ function registerPatientSlashCommands(
       if (result.success) {
         return {
           text: [
-            'Patient CareAgent activated.',
+            'Patient CareAgent activated (test data).',
             `Chart vault: ${result.vaultPath}`,
             `CANS: ${result.cansPath}`,
+            `Entries recorded: ${result.entryCount}`,
             '',
             'Use /find_provider to discover providers.',
           ].join('\n'),

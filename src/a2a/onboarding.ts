@@ -1,25 +1,20 @@
 /**
- * Patient onboarding flow via A2A.
+ * Patient onboarding flow — wires the onboarding engine to A2A modules.
  *
- * Orchestrates the full patient enrollment and onboarding sequence:
- * 1. Register patient CANS identity with Axon via A2A
- * 2. Complete onboarding questionnaire (mock data for conditions)
- * 3. Create patient-chart vault with encrypted clinical findings
- * 4. Generate local CANS.md
- *
- * Uses PatientA2AClient for Axon communication, ChartBridge for vault
- * operations, and MessageIO for patient interaction.
+ * Orchestrates patient enrollment using the local form engine (PHI never
+ * transits through Axon). Uses ChartBridge for vault operations,
+ * PatientA2AClient for lightweight Axon enrollment, and OnboardingEngine
+ * for the questionnaire-driven flow.
  */
 
-import { writeFileSync, mkdirSync, existsSync } from 'node:fs';
-import { join, dirname } from 'node:path';
+import { dirname } from 'node:path';
 import type { MessageIO } from './consent-broker.js';
 import type { PatientA2AClient } from './client.js';
 import type { ChartBridge } from './chart-bridge.js';
-import { generateCANS } from '../onboarding/cans-generator.js';
+import { OnboardingEngine, type OnboardingIO, type OnboardingResult } from '../onboarding/engine.js';
 
 // ---------------------------------------------------------------------------
-// Types
+// Types (preserved for backward compatibility)
 // ---------------------------------------------------------------------------
 
 export interface PatientCondition {
@@ -31,15 +26,15 @@ export interface PatientOnboardingData {
   name: string;
   address: string;
   phone: string;
+  dateOfBirth?: string;
   conditions: PatientCondition[];
+  medications?: string;
+  allergies?: string;
+  healthLiteracy?: string;
+  preferredLanguage?: string;
 }
 
-export interface OnboardingResult {
-  success: boolean;
-  cansPath?: string;
-  vaultPath?: string;
-  error?: string;
-}
+export { OnboardingResult };
 
 // ---------------------------------------------------------------------------
 // PatientOnboarding
@@ -61,100 +56,96 @@ export class PatientOnboarding {
   }
 
   /**
-   * Run the full patient enrollment and onboarding flow.
+   * Run onboarding with pre-filled patient data (for E2E acceptance test).
    *
-   * Steps:
-   * 1. Register patient identity with Axon via A2A enrollment
-   * 2. Record clinical conditions in the patient chart vault
-   * 3. Generate and save CANS.md locally
+   * Converts PatientOnboardingData into form engine answers and runs
+   * through the full questionnaire pipeline with validation and data routing.
    */
   async run(patientData: PatientOnboardingData): Promise<OnboardingResult> {
-    try {
-      this.messageIO.display(`Starting onboarding for ${patientData.name}...`);
+    const workspaceDir = this.resolveWorkspaceDir();
 
-      // Step 1: Enroll with Axon
-      this.messageIO.display('Registering with CareAgent network...');
-      await this.a2aClient.enroll({
-        name: patientData.name,
-        consent_posture: 'deny',
-      });
-      this.messageIO.display('Registration complete.');
+    // Convert PatientOnboardingData to form engine answers
+    const answers = PatientOnboarding.toFormAnswers(patientData);
 
-      // Step 2: Submit onboarding questionnaire answers
-      this.messageIO.display('Submitting onboarding information...');
-      const answers: Record<string, unknown> = {
-        name: patientData.name,
-        address: patientData.address,
-        phone: patientData.phone,
-        conditions: patientData.conditions,
-      };
-      await this.a2aClient.submitEnrollmentAnswer('patient_onboarding', answers);
-      this.messageIO.display('Onboarding questionnaire submitted.');
+    const io = this.createOnboardingIO();
 
-      // Step 3: Record conditions in the patient chart
-      this.messageIO.display('Recording clinical findings in your chart...');
-      for (const condition of patientData.conditions) {
-        await this.chartBridge.recordInteraction(
-          {
-            id: `onboarding-${condition.name.toLowerCase().replace(/\s+/g, '-')}`,
-            status: { state: 'completed' },
-            history: [
-              {
-                role: 'agent',
-                parts: [
-                  {
-                    type: 'data',
-                    data: {
-                      condition_name: condition.name,
-                      condition_status: condition.status,
-                      source: 'patient_onboarding',
-                    },
-                  },
-                ],
-              },
-            ],
-          },
-          {
-            provider_npi: 'self',
-            interaction_type: 'onboarding_finding',
-          },
-        );
-      }
-      this.messageIO.display(
-        `Recorded ${patientData.conditions.length} condition(s) in your chart.`,
-      );
+    const engine = new OnboardingEngine({
+      chartBridge: this.chartBridge,
+      a2aClient: this.a2aClient,
+      workspacePath: workspaceDir,
+    });
 
-      // Step 4: Generate CANS.md
-      this.messageIO.display('Generating patient configuration...');
-      const cansContent = generateCANS({
-        patient_id: `patient-${Date.now()}`,
-        public_key: 'onboarding-placeholder',
-      });
+    return engine.runWithData(io, answers);
+  }
 
-      // Determine paths (vault dir is already known to chartBridge)
-      const workspaceDir = dirname(this.chartBridge['vaultDir']);
-      const cansPath = join(workspaceDir, 'CANS.md');
+  /**
+   * Run interactive onboarding — questions asked one at a time via MessageIO.
+   */
+  async runInteractive(): Promise<OnboardingResult> {
+    const workspaceDir = this.resolveWorkspaceDir();
 
-      if (!existsSync(dirname(cansPath))) {
-        mkdirSync(dirname(cansPath), { recursive: true });
-      }
-      writeFileSync(cansPath, cansContent, 'utf-8');
-      this.messageIO.display(`CANS.md written to ${cansPath}`);
+    const io = this.createOnboardingIO();
 
-      this.messageIO.display('Onboarding complete!');
+    const engine = new OnboardingEngine({
+      chartBridge: this.chartBridge,
+      a2aClient: this.a2aClient,
+      workspacePath: workspaceDir,
+    });
 
-      return {
-        success: true,
-        cansPath,
-        vaultPath: this.chartBridge['vaultDir'],
-      };
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      this.messageIO.display(`Onboarding failed: ${errorMessage}`);
-      return {
-        success: false,
-        error: errorMessage,
-      };
+    return engine.runInteractive(io);
+  }
+
+  // -------------------------------------------------------------------------
+  // Internal
+  // -------------------------------------------------------------------------
+
+  private resolveWorkspaceDir(): string {
+    // ChartBridge.vaultDir is typically workspace/vault — go up one level
+    return dirname(this.chartBridge.vaultDir);
+  }
+
+  private createOnboardingIO(): OnboardingIO {
+    return {
+      display: (text: string) => this.messageIO.display(text),
+      ask: async (prompt: string) => {
+        this.messageIO.display(prompt);
+        // In the current MessageIO model, we auto-confirm.
+        // True interactive mode needs an extended IO interface.
+        return '';
+      },
+    };
+  }
+
+  /**
+   * Convert PatientOnboardingData to flat form engine answers.
+   */
+  static toFormAnswers(data: PatientOnboardingData): Record<string, unknown> {
+    const answers: Record<string, unknown> = {
+      consent_synthetic: true,
+      consent_audit: true,
+      patient_name: data.name,
+      date_of_birth: data.dateOfBirth ?? '1970-01-01',
+      address: data.address,
+      phone: data.phone,
+      has_conditions: data.conditions.length > 0,
+      has_medications: Boolean(data.medications),
+      has_allergies: Boolean(data.allergies),
+      health_literacy: data.healthLiteracy ?? 'standard',
+      preferred_language: data.preferredLanguage ?? 'English',
+    };
+
+    if (data.conditions.length > 0) {
+      answers['conditions_list'] = data.conditions.map((c) => c.name).join(', ');
     }
+
+    if (data.medications) {
+      answers['medications_list'] = data.medications;
+    }
+
+    if (data.allergies) {
+      answers['allergies_list'] = data.allergies;
+    }
+
+    return answers;
   }
 }

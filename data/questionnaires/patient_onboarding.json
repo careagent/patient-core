@@ -1,0 +1,245 @@
+{
+  "id": "patient-onboarding-v1",
+  "provider_type": "patient",
+  "version": "1.0.0",
+  "taxonomy_version": "1.0.0",
+  "display_name": "Patient Onboarding Questionnaire",
+  "description": "Collects patient identity, health history, and preferences for CareAgent activation.",
+  "authority": "patient-core",
+  "target_type": "patient",
+  "classification": {
+    "domain": "clinical",
+    "sensitivity": "sensitive"
+  },
+  "output_artifact": "cans",
+  "llm_system_prompt": "You are CareAgent, a patient health assistant conducting onboarding. Be warm, clear, and supportive. Adapt your language complexity to the patient's health literacy level. Help patients articulate their health situation naturally. Never rush or pressure.",
+  "completion_criteria": "All required fields collected: consent acknowledgments, identity (name, DOB, address, phone), health history (conditions, medications, allergies), and preferences (health literacy, language).",
+  "sections": [
+    {
+      "id": "consent",
+      "title": "Consent",
+      "description": "Required acknowledgments before proceeding.",
+      "question_ids": ["consent_synthetic", "consent_audit"]
+    },
+    {
+      "id": "identity",
+      "title": "Identity",
+      "description": "Patient identification information.",
+      "question_ids": ["patient_name", "date_of_birth", "address", "phone"]
+    },
+    {
+      "id": "health_history",
+      "title": "Health History",
+      "description": "Active conditions, medications, and allergies.",
+      "question_ids": ["has_conditions", "conditions_list", "has_medications", "medications_list", "has_allergies", "allergies_list"]
+    },
+    {
+      "id": "preferences",
+      "title": "Preferences",
+      "description": "Communication and interaction preferences.",
+      "question_ids": ["health_literacy", "preferred_language"]
+    }
+  ],
+  "questions": [
+    {
+      "id": "consent_synthetic",
+      "text": "This is a development environment. I confirm only synthetic data will be used.",
+      "answer_type": "boolean",
+      "required": true,
+      "hard_stop": {
+        "operator": "equals",
+        "value": "false",
+        "message": "Onboarding cannot proceed without confirming synthetic data use in the development environment."
+      },
+      "classification": {
+        "domain": "administrative",
+        "sensitivity": "non_sensitive"
+      },
+      "mode": "structured"
+    },
+    {
+      "id": "consent_audit",
+      "text": "I consent to audit logging of all agent actions on my behalf.",
+      "answer_type": "boolean",
+      "required": true,
+      "classification": {
+        "domain": "administrative",
+        "sensitivity": "non_sensitive"
+      },
+      "mode": "structured"
+    },
+    {
+      "id": "patient_name",
+      "text": "What is your full name?",
+      "answer_type": "text",
+      "required": true,
+      "validation": {
+        "min_length": 2
+      },
+      "cans_field": "patient.name",
+      "classification": {
+        "domain": "clinical",
+        "sensitivity": "sensitive"
+      },
+      "mode": "structured"
+    },
+    {
+      "id": "date_of_birth",
+      "text": "What is your date of birth?",
+      "answer_type": "date",
+      "required": true,
+      "cans_field": "patient.date_of_birth",
+      "classification": {
+        "domain": "clinical",
+        "sensitivity": "sensitive"
+      },
+      "mode": "structured"
+    },
+    {
+      "id": "address",
+      "text": "What is your mailing address?",
+      "answer_type": "text",
+      "required": true,
+      "validation": {
+        "min_length": 5
+      },
+      "cans_field": "patient.address",
+      "classification": {
+        "domain": "clinical",
+        "sensitivity": "sensitive"
+      },
+      "mode": "structured"
+    },
+    {
+      "id": "phone",
+      "text": "What is your phone number?",
+      "answer_type": "text",
+      "required": true,
+      "validation": {
+        "pattern": "^[+]?[\\d\\s()-]{7,20}$"
+      },
+      "cans_field": "patient.phone",
+      "classification": {
+        "domain": "clinical",
+        "sensitivity": "sensitive"
+      },
+      "mode": "structured"
+    },
+    {
+      "id": "has_conditions",
+      "text": "Do you have any active medical conditions?",
+      "answer_type": "boolean",
+      "required": true,
+      "classification": {
+        "domain": "clinical",
+        "sensitivity": "sensitive"
+      },
+      "mode": "structured"
+    },
+    {
+      "id": "conditions_list",
+      "text": "Please describe your active medical conditions.",
+      "answer_type": "text",
+      "required": true,
+      "show_when": {
+        "question_id": "has_conditions",
+        "operator": "equals",
+        "value": "true"
+      },
+      "cans_field": "patient.conditions",
+      "llm_guidance": "Help the patient list their conditions. Accept natural language. Ask clarifying questions if needed. Format as a comma-separated list.",
+      "classification": {
+        "domain": "clinical",
+        "sensitivity": "sensitive"
+      },
+      "mode": "guided"
+    },
+    {
+      "id": "has_medications",
+      "text": "Are you currently taking any medications?",
+      "answer_type": "boolean",
+      "required": true,
+      "classification": {
+        "domain": "clinical",
+        "sensitivity": "sensitive"
+      },
+      "mode": "structured"
+    },
+    {
+      "id": "medications_list",
+      "text": "Please list your current medications.",
+      "answer_type": "text",
+      "required": true,
+      "show_when": {
+        "question_id": "has_medications",
+        "operator": "equals",
+        "value": "true"
+      },
+      "cans_field": "patient.medications",
+      "llm_guidance": "Help the patient list medications with dosages if known. Accept natural language descriptions. Format as a comma-separated list.",
+      "classification": {
+        "domain": "clinical",
+        "sensitivity": "sensitive"
+      },
+      "mode": "guided"
+    },
+    {
+      "id": "has_allergies",
+      "text": "Do you have any known allergies?",
+      "answer_type": "boolean",
+      "required": true,
+      "classification": {
+        "domain": "clinical",
+        "sensitivity": "sensitive"
+      },
+      "mode": "structured"
+    },
+    {
+      "id": "allergies_list",
+      "text": "Please list your known allergies.",
+      "answer_type": "text",
+      "required": true,
+      "show_when": {
+        "question_id": "has_allergies",
+        "operator": "equals",
+        "value": "true"
+      },
+      "cans_field": "patient.allergies",
+      "llm_guidance": "Include drug allergies, food allergies, and environmental allergies. Ask about reaction severity if the patient mentions any.",
+      "classification": {
+        "domain": "clinical",
+        "sensitivity": "sensitive"
+      },
+      "mode": "guided"
+    },
+    {
+      "id": "health_literacy",
+      "text": "How detailed would you like medical explanations?",
+      "answer_type": "single_select",
+      "required": true,
+      "options": [
+        { "value": "simplified", "label": "Simplified", "description": "Plain language, minimal medical terms" },
+        { "value": "standard", "label": "Standard", "description": "Some medical terms with explanations" },
+        { "value": "detailed", "label": "Detailed", "description": "Full medical terminology and detail" }
+      ],
+      "cans_field": "preferences.health_literacy_level",
+      "classification": {
+        "domain": "administrative",
+        "sensitivity": "non_sensitive"
+      },
+      "mode": "structured"
+    },
+    {
+      "id": "preferred_language",
+      "text": "What is your preferred language?",
+      "answer_type": "text",
+      "required": true,
+      "cans_field": "preferences.preferred_language",
+      "classification": {
+        "domain": "administrative",
+        "sensitivity": "non_sensitive"
+      },
+      "mode": "structured"
+    }
+  ]
+}
