@@ -13,8 +13,6 @@ import { randomUUID } from 'node:crypto';
 import { createOnboardingBot } from '../../../src/bot/onboarding-bot.js';
 import { createMockTransport } from '../../../src/bot/telegram-client.js';
 import type { TelegramUpdate } from '../../../src/bot/schemas.js';
-import type { PatientChartVault, ChartOperationResult } from '../../../src/chart/types.js';
-
 // Helper: create a Telegram update
 function makeUpdate(chatId: number, text: string, updateId = 1): TelegramUpdate {
   return {
@@ -30,19 +28,22 @@ function makeUpdate(chatId: number, text: string, updateId = 1): TelegramUpdate 
 }
 
 // Helper: create a mock chart vault
-function createMockVault(): PatientChartVault & { written: Array<{ recordId: string; data: unknown }> } {
-  const written: Array<{ recordId: string; data: unknown }> = [];
+function createMockVault() {
+  const written: Array<{ content: unknown; entryType: string }> = [];
   return {
     written,
-    async read(_recordId: string): Promise<unknown> {
-      return null;
-    },
-    async write(recordId: string, data: unknown): Promise<ChartOperationResult> {
-      written.push({ recordId, data });
-      return { success: true };
-    },
-    async checkAccess(_recordId: string): Promise<boolean> {
-      return true;
+    writeEntry(content: unknown, entryType: string) {
+      written.push({ content, entryType });
+      return {
+        id: '00000000-0000-7000-8000-000000000001',
+        timestamp: new Date().toISOString(),
+        entry_type: entryType,
+        author: { type: 'patient_agent', id: 'test', display_name: 'Test', public_key: 'dGVzdA==' },
+        prev_hash: null,
+        signature: 'dGVzdA==',
+        encrypted_payload: { ciphertext: 'dGVzdA==', iv: 'dGVzdA==', auth_tag: 'dGVzdA==', key_id: 'test-key' },
+        metadata: { schema_version: '1', entry_type: entryType, author_type: 'patient_agent', author_id: 'test', payload_size: 0 },
+      } as any;
     },
   };
 }
@@ -71,7 +72,7 @@ describe('OnboardingBot', () => {
       const bot = createOnboardingBot({
         transport,
         workspacePath,
-        chartVault: vault,
+        chartVault: vault as any,
         onActivation: () => { activationCalled = true; },
       });
 
@@ -104,8 +105,8 @@ describe('OnboardingBot', () => {
 
       // Verify chart vault write
       expect(vault.written).toHaveLength(1);
-      expect(vault.written[0].recordId).toContain('patient:');
-      const data = vault.written[0].data as Record<string, unknown>;
+      expect(vault.written[0].entryType).toBe('patient_preference');
+      const data = vault.written[0].content as Record<string, unknown>;
       expect(data.patient_name).toBe('Alice Smith');
       expect(data.public_key).toBeDefined();
       expect(data.consented).toBe(true);

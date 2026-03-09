@@ -104,7 +104,7 @@ describe('Plugin Registration Integration', () => {
       const pkgPath = join(__dirname, '../../package.json');
       const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'));
       const deps = pkg.dependencies || {};
-      const approved = ['@careagent/a2a-types'];
+      const approved = ['@careagent/a2a-types', '@careagent/patient-chart'];
       const unapproved = Object.keys(deps).filter((d) => !approved.includes(d));
       expect(unapproved).toEqual([]);
     });

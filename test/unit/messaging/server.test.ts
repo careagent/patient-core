@@ -12,11 +12,8 @@ import { createHash, generateKeyPairSync, sign, randomBytes } from 'node:crypto'
 import { createMessagingServer, type MessagingServer } from '../../../src/messaging/server.js';
 import { createMessagePipeline } from '../../../src/messaging/pipeline.js';
 import { createConsentEngine } from '../../../src/consent/engine.js';
-import { generateEncryptionKey } from '../../../src/messaging/crypto.js';
 import { publicKeyToBase64Url } from '../../../src/discovery/crypto.js';
 import type { KnownProvider } from '../../../src/messaging/schemas.js';
-import type { PatientChartVault, ChartOperationResult } from '../../../src/chart/types.js';
-
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -47,15 +44,23 @@ function providerSignObj(payload: Record<string, unknown>, privB64Url: string): 
   return sign(null, data, keyObject).toString('base64url');
 }
 
-function createMockVault(): PatientChartVault {
-  const entries = new Map<string, unknown>();
+function createMockVault() {
+  const entries: unknown[] = [];
   return {
-    async read(recordId: string) { return entries.get(recordId) ?? null; },
-    async write(recordId: string, data: unknown): Promise<ChartOperationResult> {
-      entries.set(recordId, data);
-      return { success: true };
+    entries,
+    writeEntry(content: unknown, _entryType: string) {
+      entries.push(content);
+      return {
+        id: '00000000-0000-7000-8000-000000000001',
+        timestamp: new Date().toISOString(),
+        entry_type: _entryType,
+        author: { type: 'patient_agent', id: 'test', display_name: 'Test', public_key: 'dGVzdA==' },
+        prev_hash: null,
+        signature: 'dGVzdA==',
+        encrypted_payload: { ciphertext: 'dGVzdA==', iv: 'dGVzdA==', auth_tag: 'dGVzdA==', key_id: 'test-key' },
+        metadata: { schema_version: '1', entry_type: _entryType, author_type: 'patient_agent', author_id: 'test', payload_size: 0 },
+      } as any;
     },
-    async checkAccess() { return true; },
   };
 }
 
@@ -203,7 +208,6 @@ describe('createMessagingServer', () => {
   function setupServer() {
     const providerKeys = makeKeys();
     const patientKeys = makeKeys();
-    const encryptionKey = generateEncryptionKey();
     const vault = createMockVault();
     const knownProviders = new Map<string, KnownProvider>([
       [PROVIDER_NPI, {
@@ -221,9 +225,8 @@ describe('createMessagingServer', () => {
 
     const pipeline = createMessagePipeline({
       consentEngine,
-      chartVault: vault,
+      chartVault: vault as any,
       knownProviders,
-      encryptionKey,
       patientPrivateKey: patientKeys.privateKey,
       patientAgentId: PATIENT_AGENT_ID,
     });
@@ -233,7 +236,7 @@ describe('createMessagingServer', () => {
       { pipeline, knownProviders, patientAgentId: PATIENT_AGENT_ID },
     );
 
-    return { providerKeys, patientKeys, encryptionKey, vault, knownProviders, consentEngine, pipeline };
+    return { providerKeys, patientKeys, vault, knownProviders, consentEngine, pipeline };
   }
 
   // -----------------------------------------------------------------------

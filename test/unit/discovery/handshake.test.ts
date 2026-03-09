@@ -8,7 +8,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { generateKeyPairSync, type KeyObject } from 'node:crypto';
 import { createDiscoveryHandshake } from '../../../src/discovery/handshake.js';
 import type { AxonClient } from '../../../src/discovery/client.js';
-import type { PatientChartVault } from '../../../src/chart/types.js';
+import type { PatientChartClient } from '../../../src/chart/types.js';
 import type { DiscoveryResult, HandshakeResult } from '../../../src/discovery/schemas.js';
 
 // ---------------------------------------------------------------------------
@@ -70,11 +70,18 @@ function makeAxonClient(
   };
 }
 
-function makeChartVault(): PatientChartVault {
+function makeChartVault(): Pick<PatientChartClient, 'writeEntry'> & { writeEntry: ReturnType<typeof vi.fn> } {
   return {
-    read: vi.fn().mockResolvedValue(null),
-    write: vi.fn().mockResolvedValue({ success: true }),
-    checkAccess: vi.fn().mockResolvedValue(true),
+    writeEntry: vi.fn().mockReturnValue({
+      id: '00000000-0000-7000-8000-000000000001',
+      timestamp: new Date().toISOString(),
+      entry_type: 'care_relationship_established',
+      author: { type: 'patient_agent', id: 'test', display_name: 'Test', public_key: 'dGVzdA==' },
+      prev_hash: null,
+      signature: 'dGVzdA==',
+      encrypted_payload: { ciphertext: 'dGVzdA==', iv: 'dGVzdA==', auth_tag: 'dGVzdA==', key_id: 'test-key' },
+      metadata: { schema_version: '1', entry_type: 'care_relationship_established', author_type: 'patient_agent', author_id: 'test', payload_size: 0 },
+    }),
   };
 }
 
@@ -127,13 +134,13 @@ describe('discoverAndConnect', () => {
   it('stores ledger entry in chart vault on granted', async () => {
     const vault = makeChartVault();
     const client = makeAxonClient(makeDiscoveryFound(), makeHandshakeGranted());
-    const dh = createDiscoveryHandshake({ axonClient: client, chartVault: vault });
+    const dh = createDiscoveryHandshake({ axonClient: client, chartVault: vault as any });
 
     const result = await dh.discoverAndConnect('1234567890', 'patient-1', privateKey, publicKey);
 
-    expect(vault.write).toHaveBeenCalledTimes(1);
-    const [recordId, data] = (vault.write as ReturnType<typeof vi.fn>).mock.calls[0] as [string, unknown];
-    expect(recordId).toMatch(/^ledger:handshake:1234567890:/);
+    expect(vault.writeEntry).toHaveBeenCalledTimes(1);
+    const [data, entryType] = vault.writeEntry.mock.calls[0] as [unknown, string];
+    expect(entryType).toBe('care_relationship_established');
     expect(result.ledgerEntry).toBeDefined();
     expect(result.ledgerEntry!.type).toBe('handshake');
     expect(result.ledgerEntry!.provider_npi).toBe('1234567890');
@@ -145,11 +152,11 @@ describe('discoverAndConnect', () => {
   it('stores ledger entry on denied', async () => {
     const vault = makeChartVault();
     const client = makeAxonClient(makeDiscoveryFound(), makeHandshakeDenied());
-    const dh = createDiscoveryHandshake({ axonClient: client, chartVault: vault });
+    const dh = createDiscoveryHandshake({ axonClient: client, chartVault: vault as any });
 
     const result = await dh.discoverAndConnect('1234567890', 'patient-1', privateKey, publicKey);
 
-    expect(vault.write).toHaveBeenCalledTimes(1);
+    expect(vault.writeEntry).toHaveBeenCalledTimes(1);
     expect(result.ledgerEntry!.status).toBe('denied');
     expect(result.ledgerEntry!.denial_code).toBe('CREDENTIALS_INVALID');
   });
@@ -157,11 +164,11 @@ describe('discoverAndConnect', () => {
   it('stores ledger entry on error', async () => {
     const vault = makeChartVault();
     const client = makeAxonClient(makeDiscoveryFound(), makeHandshakeError());
-    const dh = createDiscoveryHandshake({ axonClient: client, chartVault: vault });
+    const dh = createDiscoveryHandshake({ axonClient: client, chartVault: vault as any });
 
     const result = await dh.discoverAndConnect('1234567890', 'patient-1', privateKey, publicKey);
 
-    expect(vault.write).toHaveBeenCalledTimes(1);
+    expect(vault.writeEntry).toHaveBeenCalledTimes(1);
     expect(result.ledgerEntry!.status).toBe('error');
     expect(result.ledgerEntry!.error).toBe('Network timeout');
   });

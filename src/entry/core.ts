@@ -100,8 +100,18 @@ export type {
   ConsentEngine,
 } from '../consent/index.js';
 
-// Chart
-export type { PatientChartVault, ChartOperationResult } from '../chart/types.js';
+// Chart (patient-chart vault integration)
+export { PatientChartClient } from '../chart/types.js';
+export type {
+  PatientChartClientConfig,
+  LedgerEntry,
+  LedgerEntryType,
+  EntryAuthor,
+  ChartQueryParams,
+  ChartQueryResult,
+  ChartEntryResult,
+  ChartIntegrityResult,
+} from '../chart/types.js';
 
 // Bot (Telegram onboarding)
 export {

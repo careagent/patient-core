@@ -7,9 +7,9 @@
  * 2. Verify Ed25519 signature (provider-core convention: shallow sorted keys)
  * 3. Verify sender is a known, active provider
  * 4. Check consent engine (Layer 5) for message:receive
- * 5. Encrypt message payload with AES-256-GCM
- * 6. Write encrypted message to chart vault as ledger entry
- * 7. Return accepted/rejected result
+ * 5. Write to chart vault via PatientChartClient (encryption, signing,
+ *    and hash-chaining handled by patient-chart's LedgerWriter)
+ * 6. Return accepted/rejected result
  *
  * Each step can short-circuit with a rejection reason.
  */
@@ -24,11 +24,10 @@ import {
 } from './schemas.js';
 import {
   verifyMessageSignature,
-  encryptPayload,
   signAck,
 } from './crypto.js';
 import type { ConsentEngine } from '../consent/engine.js';
-import type { PatientChartVault } from '../chart/types.js';
+import type { PatientChartClient } from '../chart/types.js';
 import type { KeyObject } from 'node:crypto';
 
 // ---------------------------------------------------------------------------
@@ -38,12 +37,10 @@ import type { KeyObject } from 'node:crypto';
 export interface MessagePipelineConfig {
   /** The consent engine instance (Layer 5). */
   consentEngine: ConsentEngine;
-  /** The patient chart vault for storing messages. */
-  chartVault: PatientChartVault;
+  /** The patient chart client for storing messages. */
+  chartVault: PatientChartClient;
   /** Map of known providers by NPI (from handshake records). */
   knownProviders: Map<string, KnownProvider>;
-  /** AES-256 encryption key for at-rest storage. */
-  encryptionKey: Buffer;
   /** Patient's Ed25519 private key for signing acks. */
   patientPrivateKey?: KeyObject;
   /** Patient agent ID. */
@@ -76,7 +73,6 @@ export function createMessagePipeline(config: MessagePipelineConfig) {
     consentEngine,
     chartVault,
     knownProviders,
-    encryptionKey,
     patientPrivateKey,
     patientAgentId,
   } = config;
@@ -145,30 +141,36 @@ export function createMessagePipeline(config: MessagePipelineConfig) {
       return makeNack('consent_required', correlationId);
     }
 
-    // Step 5: Encrypt message payload with AES-256-GCM
-    const payloadJson = JSON.stringify(envelope.payload);
-    const encryptedPayload = encryptPayload(payloadJson, encryptionKey);
-
-    // Step 6: Build ledger entry and write to chart vault
-    const ledgerEntry: MessageLedgerEntry = {
-      type: 'clinical_message_received',
+    // Step 5: Build ledger entry content and write to chart vault
+    // Encryption, signing, and hash-chaining are handled by PatientChartClient
+    // via patient-chart's LedgerWriter pipeline.
+    const ledgerContent = {
       correlation_id: correlationId,
       sender_npi: senderNpi,
       sender_name: envelope.payload.provider_name,
       message_type: envelope.payload.type,
       received_at: new Date().toISOString(),
       sent_at: envelope.timestamp,
-      encrypted_payload: encryptedPayload,
+      clinical_payload: envelope.payload,
       signature_verified: true,
       consent_granted: true,
     };
 
-    const vaultKey = `ledger:message:${senderNpi}:${correlationId}`;
+    let ledgerEntry: MessageLedgerEntry | undefined;
     try {
-      const result = await chartVault.write(vaultKey, ledgerEntry);
-      if (!result.success) {
-        return makeNack('storage_error', correlationId);
-      }
+      const entry = chartVault.writeEntry(ledgerContent, 'clinical_encounter');
+      ledgerEntry = {
+        type: 'clinical_message_received',
+        correlation_id: correlationId,
+        sender_npi: senderNpi,
+        sender_name: envelope.payload.provider_name,
+        message_type: envelope.payload.type,
+        received_at: ledgerContent.received_at,
+        sent_at: envelope.timestamp,
+        encrypted_payload: entry.encrypted_payload,
+        signature_verified: true,
+        consent_granted: true,
+      };
     } catch {
       return makeNack('storage_error', correlationId);
     }

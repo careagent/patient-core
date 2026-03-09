@@ -10,7 +10,7 @@
  */
 
 import type { KeyObject } from 'node:crypto';
-import type { PatientChartVault } from '../chart/types.js';
+import type { PatientChartClient } from '../chart/types.js';
 import type { AxonClient } from './client.js';
 import type { HandshakeResult, DiscoveryResult } from './schemas.js';
 
@@ -36,7 +36,7 @@ export interface HandshakeLedgerEntry {
 
 export interface DiscoveryHandshakeConfig {
   axonClient: AxonClient;
-  chartVault?: PatientChartVault;
+  chartVault?: PatientChartClient;
 }
 
 // ---------------------------------------------------------------------------
@@ -114,10 +114,7 @@ export function createDiscoveryHandshake(config: DiscoveryHandshakeConfig): Disc
     };
 
     if (chartVault) {
-      await chartVault.write(
-        `ledger:handshake:${npi}:${ledgerEntry.timestamp}`,
-        ledgerEntry,
-      );
+      chartVault.writeEntry(ledgerEntry, 'care_relationship_established');
     }
 
     return { discovery, handshake, ledgerEntry };

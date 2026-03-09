@@ -22,7 +22,7 @@ import { processInput } from './state-machine.js';
 import { generatePatientKeypair } from './keypair.js';
 import { generateCANS } from '../onboarding/cans-generator.js';
 import { computeHash } from '../activation/cans-integrity.js';
-import type { PatientChartVault } from '../chart/types.js';
+import type { PatientChartClient } from '../chart/types.js';
 import type { DiscoveryHandshake } from '../discovery/handshake.js';
 
 // ---------------------------------------------------------------------------
@@ -32,7 +32,7 @@ import type { DiscoveryHandshake } from '../discovery/handshake.js';
 export interface OnboardingBotConfig {
   transport: TelegramTransport;
   workspacePath: string;
-  chartVault?: PatientChartVault;
+  chartVault?: PatientChartClient;
   onActivation?: (cansPath: string) => void | Promise<void>;
   discoveryHandshake?: DiscoveryHandshake;
 }
@@ -91,13 +91,16 @@ export function createOnboardingBot(config: OnboardingBotConfig): OnboardingBot 
 
     // 4. Store in chart vault if available
     if (chartVault) {
-      await chartVault.write(`patient:${patientId}`, {
-        patient_id: patientId,
-        patient_name: patientName,
-        public_key: keypair.publicKeyBase64,
-        consented: true,
-        onboarded_at: new Date().toISOString(),
-      });
+      chartVault.writeEntry(
+        {
+          patient_id: patientId,
+          patient_name: patientName,
+          public_key: keypair.publicKeyBase64,
+          consented: true,
+          onboarded_at: new Date().toISOString(),
+        },
+        'patient_preference',
+      );
     }
 
     // 5. Generate and write CANS.md

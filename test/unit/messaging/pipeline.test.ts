@@ -7,9 +7,8 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { generateKeyPairSync, sign } from 'node:crypto';
 import { createMessagePipeline, type MessagePipelineConfig } from '../../../src/messaging/pipeline.js';
 import { createConsentEngine } from '../../../src/consent/engine.js';
-import type { PatientChartVault, ChartOperationResult } from '../../../src/chart/types.js';
+import type { PatientChartClient } from '../../../src/chart/types.js';
 import type { KnownProvider, SignedMessageEnvelope } from '../../../src/messaging/schemas.js';
-import { generateEncryptionKey, decryptPayload } from '../../../src/messaging/crypto.js';
 import { publicKeyToBase64Url } from '../../../src/discovery/crypto.js';
 
 // ---------------------------------------------------------------------------
@@ -63,19 +62,34 @@ function makeValidEnvelope(providerKeys: ReturnType<typeof makeProviderKeys>): S
   };
 }
 
-function createMockVault(): PatientChartVault & { entries: Map<string, unknown> } {
-  const entries = new Map<string, unknown>();
+function createMockVault(): Pick<PatientChartClient, 'writeEntry'> & { entries: unknown[] } {
+  const entries: unknown[] = [];
   return {
     entries,
-    async read(recordId: string) {
-      return entries.get(recordId) ?? null;
-    },
-    async write(recordId: string, data: unknown): Promise<ChartOperationResult> {
-      entries.set(recordId, data);
-      return { success: true };
-    },
-    async checkAccess(_recordId: string) {
-      return true;
+    writeEntry(content: unknown, _entryType: string) {
+      entries.push(content);
+      // Return a minimal LedgerEntry shape for the pipeline to use
+      return {
+        id: '00000000-0000-7000-8000-000000000001',
+        timestamp: new Date().toISOString(),
+        entry_type: _entryType,
+        author: { type: 'patient_agent', id: 'test', display_name: 'Test', public_key: 'dGVzdA==' },
+        prev_hash: null,
+        signature: 'dGVzdA==',
+        encrypted_payload: {
+          ciphertext: 'dGVzdA==',
+          iv: 'dGVzdA==',
+          auth_tag: 'dGVzdA==',
+          key_id: 'test-key',
+        },
+        metadata: {
+          schema_version: '1',
+          entry_type: _entryType,
+          author_type: 'patient_agent',
+          author_id: 'test',
+          payload_size: 0,
+        },
+      } as any;
     },
   };
 }
@@ -87,14 +101,12 @@ function createMockVault(): PatientChartVault & { entries: Map<string, unknown> 
 describe('createMessagePipeline', () => {
   let providerKeys: ReturnType<typeof makeProviderKeys>;
   let patientKeys: ReturnType<typeof makeProviderKeys>;
-  let encryptionKey: Buffer;
   let knownProviders: Map<string, KnownProvider>;
   let vault: ReturnType<typeof createMockVault>;
 
   beforeEach(() => {
     providerKeys = makeProviderKeys();
     patientKeys = makeProviderKeys();
-    encryptionKey = generateEncryptionKey();
     vault = createMockVault();
     knownProviders = new Map([
       [PROVIDER_NPI, {
@@ -117,9 +129,8 @@ describe('createMessagePipeline', () => {
 
     const config: MessagePipelineConfig = {
       consentEngine,
-      chartVault: vault,
+      chartVault: vault as any,
       knownProviders,
-      encryptionKey,
       patientPrivateKey: patientKeys.privateKey,
       patientAgentId: PATIENT_AGENT_ID,
     };
@@ -150,30 +161,25 @@ describe('createMessagePipeline', () => {
       const envelope = makeValidEnvelope(providerKeys);
       await pipeline.processMessage(JSON.stringify(envelope));
 
-      expect(vault.entries.size).toBe(1);
-      const key = `ledger:message:${PROVIDER_NPI}:${envelope.correlation_id}`;
-      const stored = vault.entries.get(key) as Record<string, unknown>;
+      expect(vault.entries).toHaveLength(1);
+      const stored = vault.entries[0] as Record<string, unknown>;
       expect(stored).toBeDefined();
-      expect(stored.type).toBe('clinical_message_received');
       expect(stored.correlation_id).toBe(envelope.correlation_id);
     });
 
-    it('encrypts the payload at rest', async () => {
+    it('returns ledger entry with encrypted payload', async () => {
       const { pipeline } = makePipeline('allow-trusted');
       const envelope = makeValidEnvelope(providerKeys);
       const result = await pipeline.processMessage(JSON.stringify(envelope));
 
       expect(result.ledgerEntry).toBeDefined();
       const entry = result.ledgerEntry!;
+      // Encryption is handled by patient-chart's LedgerWriter;
+      // verify the encrypted_payload envelope is present
+      expect(entry.encrypted_payload).toBeDefined();
       expect(entry.encrypted_payload.ciphertext).toBeDefined();
       expect(entry.encrypted_payload.iv).toBeDefined();
       expect(entry.encrypted_payload.auth_tag).toBeDefined();
-
-      // Verify we can decrypt to get the original payload
-      const decrypted = decryptPayload(entry.encrypted_payload, encryptionKey);
-      const parsed = JSON.parse(decrypted);
-      expect(parsed.type).toBe('clinical_summary');
-      expect(parsed.summary).toBe(envelope.payload.summary);
     });
 
     it('includes bilateral correlation ID in ledger entry', async () => {
@@ -440,11 +446,9 @@ describe('createMessagePipeline', () => {
   // -------------------------------------------------------------------------
 
   describe('storage', () => {
-    it('rejects message when vault write fails', async () => {
-      const failingVault: PatientChartVault = {
-        async read() { return null; },
-        async write(): Promise<ChartOperationResult> { return { success: false, error: 'disk full' }; },
-        async checkAccess() { return true; },
+    it('rejects message when vault writeEntry throws', async () => {
+      const throwingVault = {
+        writeEntry() { throw new Error('disk full'); },
       };
 
       const consentEngine = createConsentEngine({
@@ -454,36 +458,8 @@ describe('createMessagePipeline', () => {
 
       const pipeline = createMessagePipeline({
         consentEngine,
-        chartVault: failingVault,
+        chartVault: throwingVault as any,
         knownProviders,
-        encryptionKey,
-        patientAgentId: PATIENT_AGENT_ID,
-      });
-
-      const envelope = makeValidEnvelope(providerKeys);
-      const result = await pipeline.processMessage(JSON.stringify(envelope));
-
-      expect(result.ack.status).toBe('rejected');
-      expect(result.ack.reason).toBe('storage_error');
-    });
-
-    it('rejects message when vault throws', async () => {
-      const throwingVault: PatientChartVault = {
-        async read() { return null; },
-        async write(): Promise<ChartOperationResult> { throw new Error('connection lost'); },
-        async checkAccess() { return true; },
-      };
-
-      const consentEngine = createConsentEngine({
-        posture: 'allow-trusted',
-        trustList: [{ npi: PROVIDER_NPI, trust_level: 'active', provider_name: PROVIDER_NAME }],
-      });
-
-      const pipeline = createMessagePipeline({
-        consentEngine,
-        chartVault: throwingVault,
-        knownProviders,
-        encryptionKey,
         patientAgentId: PATIENT_AGENT_ID,
       });
 
@@ -565,9 +541,8 @@ describe('createMessagePipeline', () => {
 
       const pipeline = createMessagePipeline({
         consentEngine,
-        chartVault: vault,
+        chartVault: vault as any,
         knownProviders,
-        encryptionKey,
         patientAgentId: PATIENT_AGENT_ID,
         // no patientPrivateKey
       });
