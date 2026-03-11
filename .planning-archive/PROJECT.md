@@ -15,18 +15,18 @@ The patient is the ultimate authority over their health information -- nothing l
 - v1.0 OpenClaw plugin with PlatformAdapter abstraction (PLUG-01..05, PORT-01..04)
 - v1.0 Patient CANS.md activation gate with TypeBox schema, SHA-256 integrity, binary active/inactive (PCANS-01..07)
 - v1.0 Hash-chained JSONL audit pipeline with async buffered writes, bilateral correlation, patient ownership (AUDT-01..06, DFNS-04)
+- v2.0 9-stage Telegram onboarding bot with Ed25519 keypair gen and CANS.md generation (Session 06a, 1,282 tests)
+- v2.0 Axon discovery and handshake with NPI lookup, Ed25519 signatures, ConnectRequest/Grant/Denial (Session 06b, 957 tests)
+- v2.0 Consent engine: 3 postures (deny-all, allow-trusted, custom), per-provider trust, health literacy levels, wired to hardening Layer 5 (Session 06c, 699 tests)
+- v2.0 Secure messaging: WebSocket RFC 6455 server, auth tokens, AES-GCM encryption pipeline (Session 06d, 1,793 tests)
 
 ### Active
 
-- [ ] 9-stage conversational onboarding interview generating CANS.md
-- [ ] Consent engine (deny-by-default, per-provider trust, consent gate on all outbound data)
-- [ ] Data minimization on all outbound messages
-- [ ] Secure communication channel (patient-owned spec, encrypted, consent-gated, auditable)
-- [ ] Provider verification (NPI + trust_level check before engagement)
 - [ ] share-skill (supervised -- patient reviews before send)
 - [ ] request-skill (autonomous/supervised per config)
 - [ ] review-skill (summarizes provider proposals in plain language)
 - [ ] consent-skill (always manual -- agent never consents on patient's behalf)
+- [ ] Data minimization on all outbound messages (Layer 6 stub exists)
 - [ ] End-to-end integration: patient-core <-> provider-core via secure channel
 - [ ] Architecture guide, installation docs, onboarding walkthrough, channel protocol spec
 
@@ -44,7 +44,7 @@ The patient is the ultimate authority over their health information -- nothing l
 
 ## Context
 
-- **Current state:** v1.0 Foundation shipped (2026-02-22). 6,314 LOC TypeScript, 227 tests, 93%+ coverage. Plugin scaffold, CANS activation gate, and audit pipeline complete.
+- **Current state:** Phases 1-6 complete (2026-02-28). 9,536 LOC TypeScript, 4,958 tests, 93%+ coverage. v1.0 foundation (plugin scaffold, CANS activation gate, audit pipeline) plus v2.0 sessions (onboarding bot, discovery/handshake, consent engine, secure messaging).
 - **Ecosystem:** Part of the CareAgent ecosystem alongside provider-core. Both share architectural concepts (audit pipeline, CANS schema, platform adapter) but implement them independently.
 - **Provider-core status:** v1 Phases 1-5 complete (28/28 plans), Phase 6 (Docs) in progress. Agent-to-Agent Communication deferred to v2. Patient-core integration testing uses mock provider conformance harness.
 - **Hybrid architecture:** Plugin + Dedicated Agent model. The plugin handles system-level concerns (CLI, hooks, audit, tool policy). A dedicated `patientagent` provides persistent clinical workspace with CANS.md, workspace files, and clinical skills. OpenClaw multi-agent routing directs provider messages to the patient's agent.
@@ -77,11 +77,11 @@ The patient is the ultimate authority over their health information -- nothing l
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
 | Standalone repo | Maximum decoupling from provider-core; independent build/test/release | Good |
-| File-based encrypted mailbox for v1 channel | Zero-dep, offline-first, CLI-compatible; A2A-compatible envelope for future upgrade | Pending |
+| File-based encrypted mailbox for v1 channel | Zero-dep, offline-first, CLI-compatible; A2A-compatible envelope for future upgrade | Superseded (WebSocket RFC 6455 in Session 06d) |
 | Hybrid plugin + dedicated agent model | Plugin for system concerns, dedicated agent for persistent clinical workspace; matches provider-core approach | Good |
-| Consent as skill-internal flow, not hook-dependent | OpenClaw before_tool_call can't pause/resume (issue #19072); tool policy at config-time is primary enforcement | Pending |
-| Counter-based IVs for AES-256-GCM | Random IVs dangerous at scale (96-bit space); counter-based with per-sender prefix is safe | Pending |
-| Risk-stratified consent tiers | Prevent consent fatigue from undermining deny-by-default; must be Phase 5 design-time, not retrofit | Pending |
+| Consent as skill-internal flow, not hook-dependent | OpenClaw before_tool_call can't pause/resume (issue #19072); tool policy at config-time is primary enforcement | Good (consent engine wired to Layer 5) |
+| Counter-based IVs for AES-256-GCM | Random IVs dangerous at scale (96-bit space); counter-based with per-sender prefix is safe | Good (implemented in src/messaging/crypto.ts) |
+| Risk-stratified consent tiers | Prevent consent fatigue from undermining deny-by-default; must be Phase 5 design-time, not retrofit | Good (3 postures implemented) |
 | Deny-by-default consent | Data sovereignty principle -- explicit opt-in per provider | Good |
 | Consent action always manual | Hard constraint -- agent never consents on patient's behalf | Good |
 | Zero runtime npm dependencies | Matches provider-core; minimizes supply chain risk for clinical software | Good |
@@ -90,6 +90,11 @@ The patient is the ultimate authority over their health information -- nothing l
 | Async-buffered audit writes with unref'd timers | Never blocks patient workflow; prevents Node.js process hangs | Good |
 | Explicit JSON field ordering in audit entries | Prevents non-deterministic serialization that would break hash chain | Good |
 | Integrity service reports and continues on chain break | No quarantine, no chain restart -- report error and keep appending | Good |
+| Telegram as onboarding channel (Session 06a) | Low-friction mobile-native conversational UX; 9-state machine covers full CANS.md generation | Good |
+| Ed25519 for agent keypairs (Sessions 06a, 06b) | Compact signatures, fast verification, safe default curves; used in both onboarding and discovery | Good |
+| Axon discovery with NPI lookup (Session 06b) | Provider identity verified before handshake; ConnectRequest/Grant/Denial protocol | Good |
+| 3 consent postures instead of binary (Session 06c) | deny-all, allow-trusted, custom -- prevents consent fatigue while preserving sovereignty | Good |
+| WebSocket RFC 6455 for messaging (Session 06d) | Replaced file-based mailbox plan; real-time bidirectional, auth tokens, AES-GCM encryption pipeline | Good |
 
 ---
-*Last updated: 2026-02-22 after v1.0 milestone*
+*Last updated: 2026-03-02 after GSD sync with autonomous sessions 06a-06d*
